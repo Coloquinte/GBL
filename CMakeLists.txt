@@ -12,13 +12,13 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O2")
 include_directories(${GBL_SOURCE_DIR}/include/public)
 include_directories(${GBL_SOURCE_DIR}/include/private)
 
-set(DATA_TEST
-  tests/data_test.cc
-)
-
 enable_testing()
 
+set(DATA_TEST tests/data_test.cc)
 add_executable(data_test.bin ${DATA_TEST})
+add_test(data_test data_test.bin)
 
-add_test(data_test ${CMAKE_BINARY_DIR}/data_test.bin)
+set(NETLIST_TEST tests/netlist_test.cc)
+add_executable(netlist_test.bin ${NETLIST_TEST})
+add_test(netlist_test netlist_test.bin)
 

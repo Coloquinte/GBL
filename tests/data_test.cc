@@ -82,5 +82,6 @@ int main() {
     testNames();
     testProps();
     testAttrs();
+    return 0;
 }
 
