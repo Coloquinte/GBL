@@ -12,8 +12,56 @@ namespace gbl {
 /************************************************************************
  * Classes to be used internally to reference the storage
  ************************************************************************/
+class Wire : protected EltRef {
+  public:
+  typedef internal::WirePortIterator PortIterator;
+  typedef Container<PortIterator>    Ports;
 
-class Module {
+  public:
+  void disconnectAll();
+  void destroy();
+  Module getParentModule();
+
+  // Access
+  Ports ports();
+
+  Wire() {}
+  Wire(internal::ModuleImpl *ptr, Size ind);
+
+  bool operator==(const Wire&) const;
+  bool operator!=(const Wire&) const;
+  bool isValid();
+
+  friend Port;
+};
+
+class Node : protected EltRef {
+  public:
+  typedef internal::NodePortIterator PortIterator;
+  typedef Container<PortIterator>    Ports;
+
+  public:
+  bool isModule();
+  bool isInstance();
+  Module getParentModule();
+
+  void disconnectAll();
+
+  // Access
+  Ports ports();
+
+  Node() {}
+  Node(internal::ModuleImpl *ptr, Size ind);
+
+  bool operator==(const Node&) const;
+  bool operator!=(const Node&) const;
+  bool isValid();
+
+  friend ModulePort;
+  friend InstancePort;
+};
+
+class Module : public Node {
   public:
   typedef internal::WireIterator       WireIterator;
   typedef internal::NodeIterator       NodeIterator;
@@ -43,7 +91,7 @@ class Module {
   Nodes nodes();
   Instances instances();
 
-  Module();
+  Module() {}
   Module(internal::ModuleImpl* ptr);
   Module(const Module & module);
   Module& operator=(const Module & module);
@@ -51,68 +99,8 @@ class Module {
 
   bool operator==(const Module&) const;
   bool operator!=(const Module&) const;
-  bool isValid();
-
-  protected:
-  internal::ModuleImpl *_ptr;
 };
 
-class Wire {
-  public:
-  typedef internal::WirePortIterator PortIterator;
-  typedef Container<PortIterator>    Ports;
-
-  public:
-  void disconnectAll();
-  void destroy();
-  Module getParentModule();
-
-  // Access
-  Ports ports();
-
-  Wire();
-  Wire(internal::ModuleImpl *ptr, Size ind);
-
-  bool operator==(const Wire&) const;
-  bool operator!=(const Wire&) const;
-  bool isValid();
-
-  protected:
-  internal::ModuleImpl *_ptr;
-  Size _ind;
-
-  friend Port;
-};
-
-class Node {
-  public:
-  typedef internal::NodePortIterator PortIterator;
-  typedef Container<PortIterator>    Ports;
-
-  public:
-  bool isModule();
-  bool isInstance();
-  Module getParentModule();
-
-  void disconnectAll();
-
-  // Access
-  Ports ports();
-
-  Node();
-  Node(internal::ModuleImpl *ptr, Size ind);
-
-  bool operator==(const Node&) const;
-  bool operator!=(const Node&) const;
-  bool isValid();
-
-  protected:
-  internal::ModuleImpl *_ptr;
-  Size _ind;
-
-  friend ModulePort;
-  friend InstancePort;
-};
 
 class Instance : public Node {
   public:
@@ -129,23 +117,8 @@ class Instance : public Node {
 
   void replaceModule(Module mod);
 
-  Instance();
-  Instance(const Node& n);
-};
-
-struct PortRef {
-  bool operator==(const PortRef&) const;
-  bool operator!=(const PortRef&) const;
-
-  bool isValidNodePortRef();
-  bool isValidWirePortRef();
-
-  PortRef();
-  PortRef(internal::ModuleImpl *ptr, Size instInd, Size portInd);
-
-  internal::ModuleImpl *_ptr;
-  Size _instInd;
-  Size _portInd;
+  Instance() {}
+  explicit Instance(const Node& n);
 };
 
 class Port : protected PortRef {
@@ -166,7 +139,7 @@ class Port : protected PortRef {
   bool isInstancePort();
   bool isModulePort();
 
-  Port();
+  Port() {}
   Port(internal::ModuleImpl *ptr, Size instInd, Size portInd);
 
   bool operator==(const Port&) const;
@@ -179,7 +152,7 @@ class InstancePort : public Port {
   ModulePort getDownPort();
   Instance getInstance();
 
-  InstancePort();
+  InstancePort() {}
   explicit InstancePort(const Port& port);
 };
 
@@ -193,7 +166,7 @@ class ModulePort : public Port {
   void addDirIn();
   void addDirOut();
 
-  ModulePort();
+  ModulePort() {}
   explicit ModulePort(const Port& port);
 };
 

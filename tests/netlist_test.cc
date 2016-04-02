@@ -74,11 +74,13 @@ void testIteration() {
             abort();
         }
     }
+    if (fstMod.instances().size() != instances.size()) { abort(); }
     for (Wire wire : fstMod.wires()) {
         if (find(wires.begin(), wires.end(), wire) == wires.end()) {
             abort();
         }
     }
+    if (fstMod.wires().size() != wires.size()) { abort(); }
 
     // Connect stuff randomly
     for (Instance inst : fstMod.instances()) {

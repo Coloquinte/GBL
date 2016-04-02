@@ -28,8 +28,7 @@ template <class InputIterator, class UnaryFunction> class TransformIterator;
 template <class InputIterator> class Container;
 
 namespace internal {
-class NodeInputIterator;
-class WireInputIterator;
+class EltRefInputIterator;
 class PortRefInputIterator;
 
 class WireFilter;
@@ -38,6 +37,8 @@ class InstanceFilter;
 class NodePortFilter;
 class WirePortFilter;
 
+class WireTransform;
+class NodeTransform;
 class InstanceTransform;
 class ModPortTransform;
 class InsPortTransform;
@@ -49,10 +50,40 @@ typedef TransformIterator<FilterIterator<PortRefInputIterator, NodePortFilter>, 
 typedef TransformIterator<NodePortIterator, ModPortTransform> ModulePortIterator;
 typedef TransformIterator<NodePortIterator, InsPortTransform> InstancePortIterator;
 
-typedef FilterIterator<WireInputIterator, WireFilter> WireIterator;
-typedef FilterIterator<NodeInputIterator, NodeFilter> NodeIterator;
+typedef TransformIterator<FilterIterator<EltRefInputIterator, WireFilter>, WireTransform> WireIterator;
+typedef TransformIterator<FilterIterator<EltRefInputIterator, NodeFilter>, NodeTransform> NodeIterator;
 typedef TransformIterator<FilterIterator<NodeIterator, InstanceFilter>, InstanceTransform> InstanceIterator;
 }
+
+struct EltRef {
+  bool operator==(const EltRef&) const;
+  bool operator!=(const EltRef&) const;
+
+  bool isValidNodeRef();
+  bool isValidWireRef();
+
+  EltRef();
+  EltRef(internal::ModuleImpl *ptr, Size ind);
+
+  internal::ModuleImpl *_ptr;
+  Size _ind;
+};
+
+struct PortRef {
+  bool operator==(const PortRef&) const;
+  bool operator!=(const PortRef&) const;
+
+  bool isValidNodePortRef();
+  bool isValidWirePortRef();
+
+  PortRef();
+  PortRef(internal::ModuleImpl *ptr, Size instInd, Size portInd);
+
+  internal::ModuleImpl *_ptr;
+  Size _instInd;
+  Size _portInd;
+};
+
 
 } // End namespace gbl
 

@@ -183,19 +183,15 @@ NodeImpl::NodeImpl()
 } // End namespace gbl::internal
 
 inline
-Module::Module() {
-}
-
-inline
 Module::Module(internal::ModuleImpl* mod)
-: _ptr(mod)
+: Node(mod, 0)
 {
     ++_ptr->_refcnt;
 }
 
 inline
 Module::Module(const Module& module)
-: _ptr(module._ptr)
+: Node(module)
 {
     ++_ptr->_refcnt;
 }
@@ -259,20 +255,18 @@ Module::createPort() {
     return ModulePort(Port(_ptr, 0, newPortInd));
 }
 
-inline Wire::Wire() : _ptr(nullptr), _ind(-1) {}
-inline Wire::Wire(internal::ModuleImpl *ptr, Size ind) : _ptr(ptr), _ind(ind) {}
-inline Node::Node() : _ptr(nullptr), _ind(-1) {}
-inline Node::Node(internal::ModuleImpl *ptr, Size ind) : _ptr(ptr), _ind(ind) {}
-inline Instance::Instance() : Node() {}
+inline EltRef::EltRef() : _ptr(nullptr), _ind(-1) {}
+inline EltRef::EltRef(internal::ModuleImpl *ptr, Size ind) : _ptr(ptr), _ind(ind) {}
+inline Wire::Wire(internal::ModuleImpl *ptr, Size ind) : EltRef(ptr, ind) {}
+inline Node::Node(internal::ModuleImpl *ptr, Size ind) : EltRef(ptr, ind) {}
+
 inline Instance::Instance(const Node& node) : Node(node) { assert(isInstance()); }
 
 inline PortRef::PortRef() : _ptr(nullptr), _instInd(-1), _portInd(-1) {}
 inline PortRef::PortRef(internal::ModuleImpl *ptr, Size instInd, Size portInd) : _ptr(ptr), _instInd(instInd), _portInd(portInd) {}
-inline Port::Port() : PortRef() {}
 inline Port::Port(internal::ModuleImpl *ptr, Size instInd, Size portInd) : PortRef(ptr, instInd, portInd) {}
-inline ModulePort::ModulePort() : Port() {}
+
 inline ModulePort::ModulePort(const Port& port) : Port(port) { assert(isModulePort()); }
-inline InstancePort::InstancePort() : Port() {}
 inline InstancePort::InstancePort(const Port& port) : Port(port) { assert(isInstancePort()); }
 
 inline bool Node::isModule   () { return _ind == 0; }
@@ -399,28 +393,29 @@ ModulePort::destroy() {
     _ptr->_firstFreePort = _portInd;
 }
 
-bool Module::operator==(const Module& o) const { return _ptr == o._ptr; }
-bool Module::operator!=(const Module& o) const { return _ptr != o._ptr; }
-bool Wire::operator==(const Wire& o) const { return _ptr == o._ptr && _ind == o._ind; }
-bool Wire::operator!=(const Wire& o) const { return _ptr != o._ptr || _ind != o._ind; }
-bool Node::operator==(const Node& o) const { return _ptr == o._ptr && _ind == o._ind; }
-bool Node::operator!=(const Node& o) const { return _ptr != o._ptr || _ind != o._ind; }
+bool EltRef::operator==(const EltRef& o) const { return _ptr == o._ptr && _ind == o._ind; }
+bool EltRef::operator!=(const EltRef& o) const { return _ptr != o._ptr || _ind != o._ind; }
+bool Node::operator==(const Node& o) const { return EltRef::operator==(o); }
+bool Node::operator!=(const Node& o) const { return EltRef::operator!=(o); }
+bool Wire::operator==(const Wire& o) const { return EltRef::operator==(o); }
+bool Wire::operator!=(const Wire& o) const { return EltRef::operator!=(o); }
+
 bool PortRef::operator==(const PortRef& o) const { return _ptr == o._ptr && _instInd == o._instInd && _portInd == o._portInd; }
 bool PortRef::operator!=(const PortRef& o) const { return _ptr != o._ptr || _instInd != o._instInd || _portInd != o._portInd; }
 bool Port::operator==(const Port& o) const { return PortRef::operator==(o); }
 bool Port::operator!=(const Port& o) const { return PortRef::operator!=(o); }
 
-bool Module::isValid() { return _ptr != nullptr; }
-
-bool Wire::isValid() {
+bool EltRef::isValidWireRef() {
     return _ptr != nullptr
         && _ptr->_wires.isValid(_ind);
 }
-
-bool Node::isValid() {
+bool EltRef::isValidNodeRef() {
     return _ptr != nullptr
         && _ptr->_nodes.isValid(_ind);
 }
+
+bool Wire::isValid() { return isValidWireRef(); }
+bool Node::isValid() { return isValidNodeRef(); }
 
 bool Port::isValid() {
     return isValidNodePortRef();

@@ -10,17 +10,20 @@
 
 namespace gbl {
 
-// This stuff is InputIterator-only: most notably, reference_type isn't necessarily value_type&
+// This stuff is InputIterator-only: most notably, reference isn't necessarily value_type&
 template <class InputIterator, class Predicate>
-class FilterIterator : std::input_iterator_tag {
+class FilterIterator {
     private:
     InputIterator _cur;
     InputIterator _end;
     Predicate _pred;
 
     public:
-    typedef typename InputIterator::value_type value_type;
-    typedef typename InputIterator::reference_type reference_type;
+    typedef typename std::iterator_traits<InputIterator>::value_type value_type;
+    typedef typename std::iterator_traits<InputIterator>::reference reference;
+    typedef typename std::iterator_traits<InputIterator>::pointer pointer;
+    typedef typename std::iterator_traits<InputIterator>::difference_type difference_type;
+    typedef std::input_iterator_tag iterator_category;
 
     FilterIterator& operator++() {
         if (_cur != _end) {
@@ -34,7 +37,7 @@ class FilterIterator : std::input_iterator_tag {
     bool operator!=(const FilterIterator& it) const { return _cur != it._cur; }
     bool operator==(const FilterIterator& it) const { return _cur == it._cur; }
 
-    typename InputIterator::reference_type operator*() {
+    typename InputIterator::reference operator*() {
         return *_cur;
     }
     FilterIterator(InputIterator cur=InputIterator(), InputIterator end=InputIterator(), Predicate pred=Predicate())
@@ -46,14 +49,17 @@ class FilterIterator : std::input_iterator_tag {
 };
 
 template <class InputIterator, class UnaryFunction>
-class TransformIterator : std::input_iterator_tag {
+class TransformIterator {
     private:
     InputIterator _it;
     UnaryFunction _func;
 
     public:
     typedef decltype(_func(*_it)) value_type;
-    typedef value_type reference_type;
+    typedef value_type reference;
+    typedef value_type* pointer;
+    typedef typename std::iterator_traits<InputIterator>::difference_type difference_type;
+    typedef std::input_iterator_tag iterator_category;
 
     TransformIterator& operator++() { ++_it; return *this; }
     bool operator!=(const TransformIterator& it) const { return _it != it._it; }
@@ -73,6 +79,8 @@ class Container {
     const InputIterator& begin () const { return _begin; }
     const InputIterator& end   () const { return _end; }
 
+    typename InputIterator::difference_type size() const { return std::distance(_begin, _end); }
+
     private:
     InputIterator _begin;
     InputIterator _end;
@@ -80,42 +88,46 @@ class Container {
 
 namespace internal {
 // Iterators for sequential traversal and filtering
-class NodeInputIterator : public Node, std::input_iterator_tag {
+class EltRefInputIterator : public EltRef {
     public:
-    typedef Node value_type;
-    typedef Node reference_type;
-    NodeInputIterator& operator++() { ++_ind; return *this; }
+    typedef EltRef value_type;
+    typedef EltRef reference;
+    typedef EltRef* pointer;
+    typedef Size difference_type;
+    typedef std::input_iterator_tag iterator_category;
+
+    EltRefInputIterator& operator++() { ++_ind; return *this; }
     value_type operator*() { return *this; }
-    NodeInputIterator() {}
-    NodeInputIterator(const Node& n) : Node(n) {}
+    EltRefInputIterator() {}
+    EltRefInputIterator(const EltRef& n) : EltRef(n) {}
 };
 
-class WireInputIterator : public Wire, std::input_iterator_tag {
-    public:
-    typedef Wire value_type;
-    typedef Wire reference_type;
-    WireInputIterator& operator++() { ++_ind; return *this; }
-    value_type operator*() { return *this; }
-    WireInputIterator() {}
-    WireInputIterator(const Wire& w) : Wire(w) {}
-};
-
-class PortRefInputIterator : public PortRef, std::input_iterator_tag {
+class PortRefInputIterator : public PortRef {
     public:
     typedef PortRef value_type;
-    typedef PortRef reference_type;
+    typedef PortRef reference;
+    typedef PortRef* pointer;
+    typedef Size difference_type;
+    typedef std::input_iterator_tag iterator_category;
+
     PortRefInputIterator& operator++() { ++_portInd; return *this; }
     value_type operator*() { return *this; }
     PortRefInputIterator() {}
     PortRefInputIterator(const PortRef& p) : PortRef(p) {}
 };
 
-struct WireFilter { bool operator()(Wire wire){ return wire.isValid(); } };
-struct NodeFilter { bool operator()(Node node){ return node.isValid(); } };
+struct WireFilter { bool operator()(EltRef wire){ return wire.isValidWireRef(); } };
+struct NodeFilter { bool operator()(EltRef node){ return node.isValidNodeRef(); } };
 struct InstanceFilter { bool operator()(Node node){ return node.isInstance(); } };
 struct NodePortFilter { bool operator()(PortRef port){ return port.isValidNodePortRef(); } };
 struct WirePortFilter { bool operator()(PortRef port){ return port.isValidWirePortRef(); } };
 
+struct WireTransform {
+    Wire operator()(EltRef ref){ return Wire(ref._ptr, ref._ind); }
+};
+struct NodeTransform {
+    Node operator()(EltRef ref){ return Node(ref._ptr, ref._ind); }
+};
 struct InstanceTransform {
     Instance operator()(Node node){ return Instance(node); }
 };
@@ -165,18 +177,22 @@ Container<FilterIterator<InputIterator, Predicate> > getFilterContainer(Containe
 }
 
 Module::Wires Module::wires() {
-    return getFilterContainer(
-        internal::WireInputIterator(Wire(_ptr, 0)),
-        internal::WireInputIterator(Wire(_ptr, _ptr->_wires.size())),
-        internal::WireFilter()
+    return getTransformContainer(
+        getFilterContainer(
+            internal::EltRefInputIterator(EltRef(_ptr, 0)),
+            internal::EltRefInputIterator(EltRef(_ptr, _ptr->_wires.size())),
+            internal::WireFilter()
+        ), internal::WireTransform()
     );
 }
 
 Module::Nodes Module::nodes() {
-    return getFilterContainer(
-        internal::NodeInputIterator(Node(_ptr, 0)),
-        internal::NodeInputIterator(Node(_ptr, _ptr->_nodes.size())),
-        internal::NodeFilter()
+    return getTransformContainer(
+        getFilterContainer(
+            internal::EltRefInputIterator(EltRef(_ptr, 0)),
+            internal::EltRefInputIterator(EltRef(_ptr, _ptr->_nodes.size())),
+            internal::NodeFilter()
+        ), internal::NodeTransform()
     );
 }
 
@@ -205,6 +221,10 @@ Wire::Ports Wire::ports() {
 
 Instance::Ports Instance::ports() {
     return getTransformContainer(Node::ports(), internal::InsPortTransform());
+}
+
+Module::Ports Module::ports() {
+    return getTransformContainer(Node::ports(), internal::ModPortTransform());
 }
 
 } // End namespace gbl
