@@ -5,6 +5,7 @@
 #define GBL_DB_HH
 
 #include "gbl_common.hh"
+#include "gbl_forward_declarations.hh"
 
 namespace gbl {
 
@@ -12,24 +13,17 @@ namespace gbl {
  * Classes to be used internally to reference the storage
  ************************************************************************/
 
-namespace internal {
-class ModuleImpl;
-}
-
-class Module;
-class Wire;
-class Instance;
-class Port;
-class InstancePort;
-class ModulePort;
-
 class Module {
   public:
-  // Forward containers
-  class Ports;
-  class Wires;
-  class Nodes;
-  class Instances;
+  typedef internal::WireIterator       WireIterator;
+  typedef internal::NodeIterator       NodeIterator;
+  typedef internal::InstanceIterator   InstanceIterator;
+  typedef internal::ModulePortIterator PortIterator;
+
+  typedef Container<WireIterator>     Wires;
+  typedef Container<NodeIterator>     Nodes;
+  typedef Container<InstanceIterator> Instances;
+  typedef Container<PortIterator>     Ports;
 
   public:
   static Module createHier();
@@ -65,7 +59,8 @@ class Module {
 
 class Wire {
   public:
-  class Ports;
+  typedef internal::WirePortIterator PortIterator;
+  typedef Container<PortIterator>    Ports;
 
   public:
   void disconnectAll();
@@ -91,7 +86,8 @@ class Wire {
 
 class Node {
   public:
-  class Ports;
+  typedef internal::NodePortIterator PortIterator;
+  typedef Container<PortIterator>    Ports;
 
   public:
   bool isModule();
@@ -120,7 +116,8 @@ class Node {
 
 class Instance : public Node {
   public:
-  class Ports;
+  typedef internal::InstancePortIterator PortIterator;
+  typedef Container<PortIterator> Ports;
 
   public:
   Module getDownModule();
@@ -136,7 +133,22 @@ class Instance : public Node {
   Instance(const Node& n);
 };
 
-class Port {
+struct PortRef {
+  bool operator==(const PortRef&) const;
+  bool operator!=(const PortRef&) const;
+
+  bool isValidNodePortRef();
+  bool isValidWirePortRef();
+
+  PortRef();
+  PortRef(internal::ModuleImpl *ptr, Size instInd, Size portInd);
+
+  internal::ModuleImpl *_ptr;
+  Size _instInd;
+  Size _portInd;
+};
+
+class Port : protected PortRef {
   public:
   bool isConnected();
   void disconnect();
@@ -160,11 +172,6 @@ class Port {
   bool operator==(const Port&) const;
   bool operator!=(const Port&) const;
   bool isValid();
-
-  protected:
-  internal::ModuleImpl *_ptr;
-  Size _instInd;
-  Size _portInd;
 };
 
 class InstancePort : public Port {
@@ -193,6 +200,7 @@ class ModulePort : public Port {
 } // End namespace gbl
 
 #include "gbl_impl.hh"
+#include "gbl_iterators_impl.hh"
 
 #endif
 
