@@ -24,6 +24,13 @@ class Wire : protected EltRef {
   // Access
   Ports ports();
 
+  bool hasName(ID id);
+  bool hasProperty(ID id);
+  bool addName(ID id);
+  bool addProperty(ID id);
+  bool eraseName(ID id);
+  bool eraseProperty(ID id);
+
   Wire() {}
   Wire(internal::ModuleImpl *ptr, Size ind);
 
@@ -48,6 +55,13 @@ class Node : protected EltRef {
 
   // Access
   Ports ports();
+
+  bool hasName(ID id);
+  bool hasProperty(ID id);
+  bool addName(ID id);
+  bool addProperty(ID id);
+  bool eraseName(ID id);
+  bool eraseProperty(ID id);
 
   Node() {}
   Node(internal::ModuleImpl *ptr, Size ind);
@@ -126,12 +140,12 @@ class Port : protected PortRef {
   void disconnect();
   void connect(Wire wire);
 
-  // Direction information
-  bool isReader();
-  bool isDriver();
-  bool isIn();
-  bool isOut();
-  bool isInOut();
+  bool hasName(ID id);
+  bool hasProperty(ID id);
+  bool addName(ID id);
+  bool addProperty(ID id);
+  bool eraseName(ID id);
+  bool eraseProperty(ID id);
 
   Module getParentModule();
   Node getNode();

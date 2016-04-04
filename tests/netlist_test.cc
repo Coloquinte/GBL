@@ -1,5 +1,6 @@
 
 #include "gbl.hh"
+#include "gbl_symbols.hh"
 
 #include <iostream>
 #include <algorithm>
@@ -42,7 +43,7 @@ void testBasicConstruction() {
 }
 
 void testIteration() {
-    cout << "Started test for iterators" << endl;
+    cout << "Started test for iterators and data" << endl;
 
     const int numPorts = 100;
     const int numWires = 400;
@@ -59,6 +60,7 @@ void testIteration() {
     for (int i=0; i<numPorts; ++i) {
         leafPorts.push_back(leafMod.createPort());
     }
+    if (leafPorts.size() != leafMod.ports().size()) abort();
     vector<Instance> instances;
     for (int i=0; i<numInsts; ++i) {
         instances.push_back(fstMod.createInstance(leafMod));
@@ -73,6 +75,7 @@ void testIteration() {
         if (find(instances.begin(), instances.end(), inst) == instances.end()) {
             abort();
         }
+        if (leafPorts.size() != inst.ports().size()) abort();
     }
     if (fstMod.instances().size() != instances.size()) { abort(); }
     for (Wire wire : fstMod.wires()) {
@@ -91,7 +94,36 @@ void testIteration() {
         }
     }
 
-    cout << "Finished test for iterators" << endl;
+    for (Instance inst : fstMod.instances()) {
+        if ( inst.eraseProperty(Symbol::VCC)) abort();
+        if ( inst.hasProperty(Symbol::VCC)) abort();
+        if (!inst.addProperty(Symbol::VCC)) abort();
+        if ( inst.addProperty(Symbol::VCC)) abort();
+        if (!inst.hasProperty(Symbol::VCC)) abort();
+        if (!inst.eraseProperty(Symbol::VCC)) abort();
+        if ( inst.hasProperty(Symbol::VCC)) abort();
+    }
+
+    for (Port port : leafMod.ports()) {
+        if ( port.eraseProperty(Symbol::VCC)) abort();
+        if ( port.hasProperty(Symbol::VCC)) abort();
+        if (!port.addProperty(Symbol::VCC)) abort();
+        if ( port.addProperty(Symbol::VCC)) abort();
+        if (!port.hasProperty(Symbol::VCC)) abort();
+        if (!port.eraseProperty(Symbol::VCC)) abort();
+        if ( port.hasProperty(Symbol::VCC)) abort();
+    }
+    for (Port port : instances[0].ports()) {
+        if ( port.eraseProperty(Symbol::VCC)) abort();
+        if ( port.hasProperty(Symbol::VCC)) abort();
+        if (!port.addProperty(Symbol::VCC)) abort();
+        if ( port.addProperty(Symbol::VCC)) abort();
+        if (!port.hasProperty(Symbol::VCC)) abort();
+        if (!port.eraseProperty(Symbol::VCC)) abort();
+        if ( port.hasProperty(Symbol::VCC)) abort();
+    }
+
+    cout << "Finished test for iterators and data" << endl;
 }
 
 int main() {

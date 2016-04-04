@@ -12,12 +12,10 @@ namespace internal {
 struct Attribute {
   enum AttrType {
     Id,
-    Int32Int32,
     Int64
   };
   union AttrVal {
     ID _id;
-    struct { std::int32_t f, s; } _int32int32;
     std::int64_t _int64;
   };
 
@@ -39,9 +37,9 @@ struct DataImpl {
   bool addProp(ID prop);
   bool addAttr(Attribute attr);
 
-  void eraseName(ID name);
-  void eraseProp(ID prop);
-  void eraseAttr(ID attr);
+  bool eraseName(ID name);
+  bool eraseProp(ID prop);
+  bool eraseAttr(ID attr);
 
   Attribute getAttr(ID attr) const;
 
@@ -102,29 +100,35 @@ bool DataImpl::addAttr(Attribute attr) {
     return true;
   }
 }
-void DataImpl::eraseName(ID name) {
+bool DataImpl::eraseName(ID name) {
   for(Size i=0; i<_names.size(); ++i){
     if(_names[i] == name) {
       std::swap(_names[i], _names.back());
       _names.pop_back();
+      return true;
     }
   }
+  return false;
 }
-void DataImpl::eraseProp(ID prop) {
+bool DataImpl::eraseProp(ID prop) {
   for(Size i=0; i<_props.size(); ++i){
     if(_props[i] == prop) {
       std::swap(_props[i], _props.back());
       _props.pop_back();
+      return true;
     }
   }
+  return false;
 }
-void DataImpl::eraseAttr(ID attr) {
+bool DataImpl::eraseAttr(ID attr) {
   for(Size i=0; i<_attrs.size(); ++i){
     if(_attrs[i]._id == attr) {
       std::swap(_attrs[i], _attrs.back());
       _attrs.pop_back();
+      return true;
     }
   }
+  return false;
 }
 void DataImpl::clear() {
   _names.clear();

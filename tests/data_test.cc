@@ -18,13 +18,13 @@ void testNames() {
         if (data.hasName(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
-        data.addName(i);
+        if (!data.addName(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
         if (!data.hasName(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
-        data.eraseName(i);
+        if (!data.eraseName(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
         if (data.hasName(i)) abort();
@@ -40,13 +40,13 @@ void testProps() {
         if (data.hasProp(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
-        data.addProp(i);
+        if (!data.addProp(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
         if (!data.hasProp(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
-        data.eraseProp(i);
+        if (!data.eraseProp(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
         if (data.hasProp(i)) abort();
@@ -65,13 +65,13 @@ void testAttrs() {
         Attribute attr;
         attr._id = i;
         attr._val._id = 0;
-        data.addAttr(attr);
+        if (!data.addAttr(attr)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
         if (!data.hasAttr(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
-        data.eraseAttr(i);
+        if (!data.eraseAttr(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
         if (data.hasAttr(i)) abort();
