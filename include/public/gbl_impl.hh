@@ -2,7 +2,6 @@
 #ifndef GBL_IMPL_HH
 #define GBL_IMPL_HH
 
-#include "gbl_common.hh"
 #include "data_impl.hh"
 
 #include <vector>

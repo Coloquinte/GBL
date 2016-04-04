@@ -4,7 +4,6 @@
 #ifndef GBL_DB_HH
 #define GBL_DB_HH
 
-#include "gbl_common.hh"
 #include "gbl_forward_declarations.hh"
 
 namespace gbl {

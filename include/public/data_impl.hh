@@ -2,7 +2,7 @@
 #ifndef GBL_DATA_IMPL_HH
 #define GBL_DATA_IMPL_HH
 
-#include "gbl_common.hh"
+#include "gbl_forward_declarations.hh"
 
 #include <vector>
 
@@ -39,9 +39,9 @@ struct DataImpl {
   bool addProp(ID prop);
   bool addAttr(Attribute attr);
 
-  void removeName(ID name);
-  void removeProp(ID prop);
-  void removeAttr(ID attr);
+  void eraseName(ID name);
+  void eraseProp(ID prop);
+  void eraseAttr(ID attr);
 
   Attribute getAttr(ID attr) const;
 
@@ -102,7 +102,7 @@ bool DataImpl::addAttr(Attribute attr) {
     return true;
   }
 }
-void DataImpl::removeName(ID name) {
+void DataImpl::eraseName(ID name) {
   for(Size i=0; i<_names.size(); ++i){
     if(_names[i] == name) {
       std::swap(_names[i], _names.back());
@@ -110,7 +110,7 @@ void DataImpl::removeName(ID name) {
     }
   }
 }
-void DataImpl::removeProp(ID prop) {
+void DataImpl::eraseProp(ID prop) {
   for(Size i=0; i<_props.size(); ++i){
     if(_props[i] == prop) {
       std::swap(_props[i], _props.back());
@@ -118,7 +118,7 @@ void DataImpl::removeProp(ID prop) {
     }
   }
 }
-void DataImpl::removeAttr(ID attr) {
+void DataImpl::eraseAttr(ID attr) {
   for(Size i=0; i<_attrs.size(); ++i){
     if(_attrs[i]._id == attr) {
       std::swap(_attrs[i], _attrs.back());

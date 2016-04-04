@@ -2,7 +2,12 @@
 #ifndef GBL_FORWARD_DECLARATIONS_HH
 #define GBL_FORWARD_DECLARATIONS_HH
 
+#include <cstdint>
+
 namespace gbl {
+
+typedef std::uint32_t ID;
+typedef std::uint32_t Size;
 
 // Main classes
 

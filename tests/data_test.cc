@@ -1,5 +1,6 @@
 
 #include "data_impl.hh"
+#include "gbl_translate.hh"
 
 #include <iostream>
 
@@ -7,7 +8,7 @@ using namespace gbl;
 using namespace gbl::internal;
 using namespace std;
 
-const ID maxTestID = 10000;
+const ID maxTestID = 1000;
 
 void testNames() {
     cout << "Started test for names" << endl;
@@ -23,7 +24,7 @@ void testNames() {
         if (!data.hasName(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
-        data.removeName(i);
+        data.eraseName(i);
     }
     for (ID i=0; i<maxTestID; ++i) {
         if (data.hasName(i)) abort();
@@ -45,7 +46,7 @@ void testProps() {
         if (!data.hasProp(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
-        data.removeProp(i);
+        data.eraseProp(i);
     }
     for (ID i=0; i<maxTestID; ++i) {
         if (data.hasProp(i)) abort();
@@ -70,7 +71,7 @@ void testAttrs() {
         if (!data.hasAttr(i)) abort();
     }
     for (ID i=0; i<maxTestID; ++i) {
-        data.removeAttr(i);
+        data.eraseAttr(i);
     }
     for (ID i=0; i<maxTestID; ++i) {
         if (data.hasAttr(i)) abort();
@@ -78,10 +79,42 @@ void testAttrs() {
     cout << "Finished test for attributes" << endl;
 }
 
+void testTranslator() {
+    cout << "Started test for translation" << endl;
+
+    #define GBL_DECL_ARRAY
+    #include "gbl_symbols.hh"
+    #undef GBL_DECL_ARRAY
+
+    Translator t1;
+    for (ID id = Symbol::ENUM_NULL_SYMBOL+1; id < Symbol::ENUM_MAX_SYMBOL; ++id) {
+        if (t1.getOrRegisterID(string(symbolStrings[id])) != id) {
+            abort();
+        }
+    }
+    Translator t2;
+    for (ID id = Symbol::ENUM_NULL_SYMBOL+1; id < Symbol::ENUM_MAX_SYMBOL; ++id) {
+        if (t2.getString(id) != symbolStrings[id]) {
+            abort();
+        }
+    }
+
+    Translator t3;
+    std::string testStrings[] = { "Bidule", "", "Truc", ";&#\\" };
+    for (const std::string& s : testStrings) {
+        ID id = t3.getOrRegisterID(s);
+        if (t3.getString(id) != s) {
+            abort();
+        } 
+    }
+    cout << "Finished test for translation" << endl;
+}
+
 int main() {
     testNames();
     testProps();
     testAttrs();
+    testTranslator();
     return 0;
 }
 
