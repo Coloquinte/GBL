@@ -58,6 +58,9 @@ typedef TransformIterator<NodePortIterator, InsPortTransform> InstancePortIterat
 typedef TransformIterator<FilterIterator<EltRefInputIterator, WireFilter>, WireTransform> WireIterator;
 typedef TransformIterator<FilterIterator<EltRefInputIterator, NodeFilter>, NodeTransform> NodeIterator;
 typedef TransformIterator<FilterIterator<NodeIterator, InstanceFilter>, InstanceTransform> InstanceIterator;
+
+typedef const ID* NameIterator;
+typedef const ID* PropertyIterator;
 }
 
 struct EltRef {
@@ -89,6 +92,8 @@ struct PortRef {
   Size _portInd;
 };
 
+typedef Container<internal::NameIterator>     Names;
+typedef Container<internal::PropertyIterator> Properties;
 
 } // End namespace gbl
 

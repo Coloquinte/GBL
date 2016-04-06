@@ -48,6 +48,8 @@ void testIteration() {
     const int numPorts = 100;
     const int numWires = 400;
     const int numInsts = 300;
+    const int numTestIDs = 20;
+
     random_device r;
     default_random_engine rengine(r());
 
@@ -102,6 +104,15 @@ void testIteration() {
         if (!inst.hasProperty(Symbol::VCC)) abort();
         if (!inst.eraseProperty(Symbol::VCC)) abort();
         if ( inst.hasProperty(Symbol::VCC)) abort();
+
+        if (inst.names().size() != 0) abort();
+        if (inst.properties().size() != 0) abort();
+        for (ID i=0; i<numTestIDs; ++i) {
+            inst.addName(i);
+            inst.addProperty(i);
+        }
+        if (inst.names().size() != numTestIDs) abort();
+        if (inst.properties().size() != numTestIDs) abort();
     }
 
     for (Port port : leafMod.ports()) {
@@ -112,7 +123,17 @@ void testIteration() {
         if (!port.hasProperty(Symbol::VCC)) abort();
         if (!port.eraseProperty(Symbol::VCC)) abort();
         if ( port.hasProperty(Symbol::VCC)) abort();
+
+        if (port.names().size() != 0) abort();
+        if (port.properties().size() != 0) abort();
+        for (ID i=0; i<numTestIDs; ++i) {
+            port.addName(i);
+            port.addProperty(i);
+        }
+        if (port.names().size() != numTestIDs) abort();
+        if (port.properties().size() != numTestIDs) abort();
     }
+
     for (Port port : instances[0].ports()) {
         if ( port.eraseProperty(Symbol::VCC)) abort();
         if ( port.hasProperty(Symbol::VCC)) abort();
@@ -121,6 +142,15 @@ void testIteration() {
         if (!port.hasProperty(Symbol::VCC)) abort();
         if (!port.eraseProperty(Symbol::VCC)) abort();
         if ( port.hasProperty(Symbol::VCC)) abort();
+
+        if (port.names().size() != 0) abort();
+        if (port.properties().size() != 0) abort();
+        for (ID i=0; i<numTestIDs; ++i) {
+            port.addName(i);
+            port.addProperty(i);
+        }
+        if (port.names().size() != numTestIDs) abort();
+        if (port.properties().size() != numTestIDs) abort();
     }
 
     cout << "Finished test for iterators and data" << endl;

@@ -392,121 +392,121 @@ ModulePort::destroy() {
     _ptr->_firstFreePort = _portInd;
 }
 
-bool EltRef::operator==(const EltRef& o) const { return _ptr == o._ptr && _ind == o._ind; }
-bool EltRef::operator!=(const EltRef& o) const { return _ptr != o._ptr || _ind != o._ind; }
-bool Node::operator==(const Node& o) const { return EltRef::operator==(o); }
-bool Node::operator!=(const Node& o) const { return EltRef::operator!=(o); }
-bool Wire::operator==(const Wire& o) const { return EltRef::operator==(o); }
-bool Wire::operator!=(const Wire& o) const { return EltRef::operator!=(o); }
+inline bool EltRef::operator==(const EltRef& o) const { return _ptr == o._ptr && _ind == o._ind; }
+inline bool EltRef::operator!=(const EltRef& o) const { return _ptr != o._ptr || _ind != o._ind; }
+inline bool Node::operator==(const Node& o) const { return EltRef::operator==(o); }
+inline bool Node::operator!=(const Node& o) const { return EltRef::operator!=(o); }
+inline bool Wire::operator==(const Wire& o) const { return EltRef::operator==(o); }
+inline bool Wire::operator!=(const Wire& o) const { return EltRef::operator!=(o); }
 
-bool PortRef::operator==(const PortRef& o) const { return _ptr == o._ptr && _instInd == o._instInd && _portInd == o._portInd; }
-bool PortRef::operator!=(const PortRef& o) const { return _ptr != o._ptr || _instInd != o._instInd || _portInd != o._portInd; }
-bool Port::operator==(const Port& o) const { return PortRef::operator==(o); }
-bool Port::operator!=(const Port& o) const { return PortRef::operator!=(o); }
+inline bool PortRef::operator==(const PortRef& o) const { return _ptr == o._ptr && _instInd == o._instInd && _portInd == o._portInd; }
+inline bool PortRef::operator!=(const PortRef& o) const { return _ptr != o._ptr || _instInd != o._instInd || _portInd != o._portInd; }
+inline bool Port::operator==(const Port& o) const { return PortRef::operator==(o); }
+inline bool Port::operator!=(const Port& o) const { return PortRef::operator!=(o); }
 
-bool EltRef::isValidWireRef() {
+inline bool EltRef::isValidWireRef() {
     return _ptr != nullptr
         && _ptr->_wires.isValid(_ind);
 }
-bool EltRef::isValidNodeRef() {
+inline bool EltRef::isValidNodeRef() {
     return _ptr != nullptr
         && _ptr->_nodes.isValid(_ind);
 }
-bool PortRef::isValidNodePortRef() {
+inline bool PortRef::isValidNodePortRef() {
     return _ptr != nullptr
         && _ptr->_nodes.isValid(_instInd)
         && _ptr->_nodes[_instInd]._instanciation->_nodes[0]._refs[_portInd].isValid();
 }
-bool PortRef::isValidWirePortRef() {
+inline bool PortRef::isValidWirePortRef() {
     return _ptr != nullptr
         && _ptr->_wires.isValid(_instInd)
         && _ptr->_wires[_instInd]._refs[_portInd].isValid();
 }
 
-bool Wire::isValid() { return isValidWireRef(); }
-bool Node::isValid() { return isValidNodeRef(); }
-bool Port::isValid() { return isValidNodePortRef(); }
+inline bool Wire::isValid() { return isValidWireRef(); }
+inline bool Node::isValid() { return isValidNodeRef(); }
+inline bool Port::isValid() { return isValidNodePortRef(); }
 
-bool Wire::hasName(ID id) {
+inline bool Wire::hasName(ID id) {
     assert(isValid());
     return _ptr->_wires[_ind]._data.hasName(id);
 }
-bool Wire::hasProperty(ID id) {
+inline bool Wire::hasProperty(ID id) {
     assert(isValid());
     return _ptr->_wires[_ind]._data.hasProp(id);
 }
-bool Wire::addName(ID id) {
+inline bool Wire::addName(ID id) {
     assert(isValid());
     return _ptr->_wires[_ind]._data.addName(id);
 }
-bool Wire::addProperty(ID id) {
+inline bool Wire::addProperty(ID id) {
     assert(isValid());
     return _ptr->_wires[_ind]._data.addProp(id);
 }
-bool Wire::eraseName(ID id) {
+inline bool Wire::eraseName(ID id) {
     assert(isValid());
     return _ptr->_wires[_ind]._data.eraseName(id);
 }
-bool Wire::eraseProperty(ID id) {
+inline bool Wire::eraseProperty(ID id) {
     assert(isValid());
     return _ptr->_wires[_ind]._data.eraseProp(id);
 }
 
-bool Node::hasName(ID id) {
+inline bool Node::hasName(ID id) {
     assert(isValid());
     return _ptr->_nodes[_ind]._data.hasName(id);
 }
-bool Node::hasProperty(ID id) {
+inline bool Node::hasProperty(ID id) {
     assert(isValid());
     return _ptr->_nodes[_ind]._data.hasProp(id);
 }
-bool Node::addName(ID id) {
+inline bool Node::addName(ID id) {
     assert(isValid());
     return _ptr->_nodes[_ind]._data.addName(id);
 }
-bool Node::addProperty(ID id) {
+inline bool Node::addProperty(ID id) {
     assert(isValid());
     return _ptr->_nodes[_ind]._data.addProp(id);
 }
-bool Node::eraseName(ID id) {
+inline bool Node::eraseName(ID id) {
     assert(isValid());
     return _ptr->_nodes[_ind]._data.eraseName(id);
 }
-bool Node::eraseProperty(ID id) {
+inline bool Node::eraseProperty(ID id) {
     assert(isValid());
     return _ptr->_nodes[_ind]._data.eraseProp(id);
 }
 
-bool Port::hasName(ID id) {
+inline bool Port::hasName(ID id) {
     assert(isValid());
     if (_ptr->_nodes[_instInd]._refData.size() <= _portInd) return false;
     return _ptr->_nodes[_instInd]._refData[_portInd].hasName(id);
 }
-bool Port::hasProperty(ID id) {
+inline bool Port::hasProperty(ID id) {
     assert(isValid());
     if (_ptr->_nodes[_instInd]._refData.size() <= _portInd) return false;
     return _ptr->_nodes[_instInd]._refData[_portInd].hasProp(id);
 }
-bool Port::addName(ID id) {
+inline bool Port::addName(ID id) {
     assert(isValid());
     if (_ptr->_nodes[_instInd]._refData.size() <= _portInd) {
         _ptr->_nodes[_instInd]._refData.resize(_portInd+1);
     }
     return _ptr->_nodes[_instInd]._refData[_portInd].addName(id);
 }
-bool Port::addProperty(ID id) {
+inline bool Port::addProperty(ID id) {
     assert(isValid());
     if (_ptr->_nodes[_instInd]._refData.size() <= _portInd) {
         _ptr->_nodes[_instInd]._refData.resize(_portInd+1);
     }
     return _ptr->_nodes[_instInd]._refData[_portInd].addProp(id);
 }
-bool Port::eraseName(ID id) {
+inline bool Port::eraseName(ID id) {
     assert(isValid());
     if (_ptr->_nodes[_instInd]._refData.size() <= _portInd) return false;
     return _ptr->_nodes[_instInd]._refData[_portInd].eraseName(id);
 }
-bool Port::eraseProperty(ID id) {
+inline bool Port::eraseProperty(ID id) {
     assert(isValid());
     if (_ptr->_nodes[_instInd]._refData.size() <= _portInd) return false;
     return _ptr->_nodes[_instInd]._refData[_portInd].eraseProp(id);

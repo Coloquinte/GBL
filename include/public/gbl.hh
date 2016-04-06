@@ -13,8 +13,8 @@ namespace gbl {
  ************************************************************************/
 class Wire : protected EltRef {
   public:
-  typedef internal::WirePortIterator PortIterator;
-  typedef Container<PortIterator>    Ports;
+  typedef internal::WirePortIterator  PortIterator;
+  typedef Container<PortIterator>     Ports;
 
   public:
   void disconnectAll();
@@ -31,6 +31,9 @@ class Wire : protected EltRef {
   bool eraseName(ID id);
   bool eraseProperty(ID id);
 
+  Names names();
+  Properties properties();
+
   Wire() {}
   Wire(internal::ModuleImpl *ptr, Size ind);
 
@@ -43,8 +46,8 @@ class Wire : protected EltRef {
 
 class Node : protected EltRef {
   public:
-  typedef internal::NodePortIterator PortIterator;
-  typedef Container<PortIterator>    Ports;
+  typedef internal::NodePortIterator  PortIterator;
+  typedef Container<PortIterator>     Ports;
 
   public:
   bool isModule();
@@ -62,6 +65,9 @@ class Node : protected EltRef {
   bool addProperty(ID id);
   bool eraseName(ID id);
   bool eraseProperty(ID id);
+
+  Names names();
+  Properties properties();
 
   Node() {}
   Node(internal::ModuleImpl *ptr, Size ind);
@@ -118,7 +124,7 @@ class Module : public Node {
 class Instance : public Node {
   public:
   typedef internal::InstancePortIterator PortIterator;
-  typedef Container<PortIterator> Ports;
+  typedef Container<PortIterator>        Ports;
 
   public:
   Module getDownModule();
@@ -146,6 +152,9 @@ class Port : protected PortRef {
   bool addProperty(ID id);
   bool eraseName(ID id);
   bool eraseProperty(ID id);
+
+  Names names();
+  Properties properties();
 
   Module getParentModule();
   Node getNode();

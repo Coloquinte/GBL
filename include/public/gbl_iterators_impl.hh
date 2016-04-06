@@ -79,7 +79,7 @@ class Container {
     const InputIterator& begin () const { return _begin; }
     const InputIterator& end   () const { return _end; }
 
-    typename InputIterator::difference_type size() const { return std::distance(_begin, _end); }
+    typename std::iterator_traits<InputIterator>::difference_type size() const { return std::distance(_begin, _end); }
 
     private:
     InputIterator _begin;
@@ -176,7 +176,8 @@ Container<FilterIterator<InputIterator, Predicate> > getFilterContainer(Containe
     return getFilterContainer(full.begin(), full.end(), pred);
 }
 
-Module::Wires Module::wires() {
+inline Module::Wires
+Module::wires() {
     return getTransformContainer(
         getFilterContainer(
             internal::EltRefInputIterator(EltRef(_ptr, 0)),
@@ -186,7 +187,8 @@ Module::Wires Module::wires() {
     );
 }
 
-Module::Nodes Module::nodes() {
+inline Module::Nodes
+Module::nodes() {
     return getTransformContainer(
         getFilterContainer(
             internal::EltRefInputIterator(EltRef(_ptr, 0)),
@@ -196,14 +198,16 @@ Module::Nodes Module::nodes() {
     );
 }
 
-Module::Instances Module::instances() {
+inline Module::Instances
+Module::instances() {
     return getTransformContainer(
         getFilterContainer(nodes(), internal::InstanceFilter()),
         internal::InstanceTransform()
     );
 }
 
-Node::Ports Node::ports() {
+inline Node::Ports
+Node::ports() {
     return getTransformContainer(getFilterContainer(
         internal::PortRefInputIterator(PortRef(_ptr, _ind, 0)),
         internal::PortRefInputIterator(PortRef(_ptr, _ind, _ptr->_nodes[_ind]._instanciation->_nodes[0]._refs.size())),
@@ -211,7 +215,8 @@ Node::Ports Node::ports() {
     ), internal::NodePortRefTransform());
 }
 
-Wire::Ports Wire::ports() {
+inline Wire::Ports
+Wire::ports() {
     return getTransformContainer(getFilterContainer(
         internal::PortRefInputIterator(PortRef(_ptr, _ind, 0)),
         internal::PortRefInputIterator(PortRef(_ptr, _ind, _ptr->_wires[_ind]._refs.size())),
@@ -219,12 +224,41 @@ Wire::Ports Wire::ports() {
     ), internal::WirePortRefTransform());
 }
 
-Instance::Ports Instance::ports() {
+inline Instance::Ports
+Instance::ports() {
     return getTransformContainer(Node::ports(), internal::InsPortTransform());
 }
 
-Module::Ports Module::ports() {
+inline Module::Ports
+Module::ports() {
     return getTransformContainer(Node::ports(), internal::ModPortTransform());
+}
+
+inline Names Node::names() {
+    const internal::DataImpl& data = _ptr->_nodes[_ind]._data;
+    return Names(data.beginNames(), data.endNames());
+}
+inline Properties Node::properties() {
+    const internal::DataImpl& data = _ptr->_nodes[_ind]._data;
+    return Properties(data.beginProps(), data.endProps());
+}
+inline Names Wire::names() {
+    const internal::DataImpl& data = _ptr->_wires[_ind]._data;
+    return Names(data.beginNames(), data.endNames());
+}
+inline Properties Wire::properties() {
+    const internal::DataImpl& data = _ptr->_wires[_ind]._data;
+    return Properties(data.beginProps(), data.endProps());
+}
+inline Names Port::names() {
+    const std::vector<internal::DataImpl>& refData = _ptr->_nodes[_instInd]._refData;
+    if (refData.size() <= _portInd) return Names(nullptr, nullptr);
+    else return Names(refData[_portInd].beginNames(), refData[_portInd].endNames());
+}
+inline Properties Port::properties() {
+    const std::vector<internal::DataImpl>& refData = _ptr->_nodes[_instInd]._refData;
+    if (refData.size() <= _portInd) return Properties(nullptr, nullptr);
+    else return Names(refData[_portInd].beginProps(), refData[_portInd].endProps());
 }
 
 } // End namespace gbl

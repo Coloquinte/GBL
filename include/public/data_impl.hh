@@ -43,6 +43,11 @@ struct DataImpl {
 
   Attribute getAttr(ID attr) const;
 
+  NameIterator beginNames() const { return &_names[0]; }
+  NameIterator endNames  () const { return &_names[0] + _names.size(); }
+  PropertyIterator beginProps() const { return &_props[0]; }
+  PropertyIterator endProps  () const { return &_props[0] + _props.size(); }
+
   void clear();
 };
 
