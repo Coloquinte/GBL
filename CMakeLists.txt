@@ -9,8 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Werror -std=c++11")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Og -fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O2")
 
-include_directories(${GBL_SOURCE_DIR}/include/public)
-include_directories(${GBL_SOURCE_DIR}/include/private)
+include_directories(${GBL_SOURCE_DIR}/include)
 
 enable_testing()
 

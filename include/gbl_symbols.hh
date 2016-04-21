@@ -8,7 +8,7 @@
 #ifndef GBL_DECL_ARRAY
 // Expand into an enum
 
-#include "gbl_forward_declarations.hh"
+#include "private/gbl_forward_declarations.hh"
 
 #ifdef __cplusplus
 // C++ case: namespace allow us to use gbl::Symbol::*

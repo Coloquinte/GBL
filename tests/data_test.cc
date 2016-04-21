@@ -1,6 +1,6 @@
 
-#include "data_impl.hh"
-#include "gbl_translate.hh"
+#include "private/data_impl.hh"
+#include "private/gbl_translate.hh"
 
 #include <iostream>
 

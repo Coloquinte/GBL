@@ -4,7 +4,7 @@
 #ifndef GBL_DB_HH
 #define GBL_DB_HH
 
-#include "gbl_forward_declarations.hh"
+#include "private/gbl_forward_declarations.hh"
 
 namespace gbl {
 
@@ -194,8 +194,8 @@ class ModulePort : public Port {
 
 } // End namespace gbl
 
-#include "gbl_impl.hh"
-#include "gbl_iterators_impl.hh"
+#include "private/gbl_impl.hh"
+#include "private/gbl_iterators_impl.hh"
 
 #endif
 
