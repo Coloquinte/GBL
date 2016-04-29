@@ -1,3 +1,4 @@
+// Copyright (C) 2016 Gabriel Gouvine - All Rights Reserved
 
 #if defined(GBL_DECL_ARRAY) || !defined(GBL_SYMBOLS_HH)
 

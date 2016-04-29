@@ -1,3 +1,4 @@
+// Copyright (C) 2016 Gabriel Gouvine - All Rights Reserved
 
 #ifndef GBL_FORWARD_DECLARATIONS_HH
 #define GBL_FORWARD_DECLARATIONS_HH

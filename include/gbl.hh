@@ -1,5 +1,4 @@
-// Header for GBL's C++ interface
-// Entirely a proxy for the C interface
+// Copyright (C) 2016 Gabriel Gouvine - All Rights Reserved
 
 #ifndef GBL_DB_HH
 #define GBL_DB_HH
