@@ -258,6 +258,8 @@ inline EltRef::EltRef() : _ptr(nullptr), _ind(-1) {}
 inline EltRef::EltRef(internal::ModuleImpl *ptr, Size ind) : _ptr(ptr), _ind(ind) {}
 inline Wire::Wire(internal::ModuleImpl *ptr, Size ind) : EltRef(ptr, ind) {}
 inline Node::Node(internal::ModuleImpl *ptr, Size ind) : EltRef(ptr, ind) {}
+inline EltRef& Node::ref() { return *this; }
+inline EltRef& Wire::ref() { return *this; }
 
 inline Instance::Instance(const Node& node) : Node(node) { assert(isInstance()); }
 

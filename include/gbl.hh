@@ -1,6 +1,3 @@
-// Header for GBL's C++ interface
-// Entirely a proxy for the C interface
-
 #ifndef GBL_DB_HH
 #define GBL_DB_HH
 
@@ -41,6 +38,8 @@ class Wire : protected EltRef {
   bool operator!=(const Wire&) const;
   bool isValid();
 
+  // Internal use
+  EltRef& ref();
   friend Port;
 };
 
@@ -76,6 +75,8 @@ class Node : protected EltRef {
   bool operator!=(const Node&) const;
   bool isValid();
 
+  // Internal use
+  EltRef& ref();
   friend ModulePort;
   friend InstancePort;
 };
@@ -118,6 +119,8 @@ class Module : public Node {
 
   bool operator==(const Module&) const;
   bool operator!=(const Module&) const;
+
+  friend FlatView;
 };
 
 

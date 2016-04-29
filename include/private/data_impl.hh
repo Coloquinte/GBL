@@ -51,25 +51,25 @@ struct DataImpl {
   void clear();
 };
 
-bool DataImpl::hasName(ID name) const {
+inline bool DataImpl::hasName(ID name) const {
   for(ID id : _names){
     if (id == name) return true;
   }
   return false;
 }
-bool DataImpl::hasProp(ID prop) const {
+inline bool DataImpl::hasProp(ID prop) const {
   for(ID id : _props){
     if (id == prop) return true;
   }
   return false;
 }
-bool DataImpl::hasAttr(ID attr) const {
+inline bool DataImpl::hasAttr(ID attr) const {
   for(Attribute a : _attrs){
     if (a._id == attr) return true;
   }
   return false;
 }
-Attribute DataImpl::getAttr(ID attr) const {
+inline Attribute DataImpl::getAttr(ID attr) const {
   for(Attribute a : _attrs){
     if (a._id == attr) {
       return a;
@@ -78,7 +78,7 @@ Attribute DataImpl::getAttr(ID attr) const {
   // Bad behaviour: should error
   return Attribute();
 }
-bool DataImpl::addName(ID name) {
+inline bool DataImpl::addName(ID name) {
   if (hasName(name)) {
     return false;
   }
@@ -87,7 +87,7 @@ bool DataImpl::addName(ID name) {
     return true;
   }
 }
-bool DataImpl::addProp(ID prop) {
+inline bool DataImpl::addProp(ID prop) {
   if (hasProp(prop)) {
     return false;
   }
@@ -96,7 +96,7 @@ bool DataImpl::addProp(ID prop) {
     return true;
   }
 }
-bool DataImpl::addAttr(Attribute attr) {
+inline bool DataImpl::addAttr(Attribute attr) {
   if (hasAttr(attr._id)) {
     return false;
   }
@@ -105,7 +105,7 @@ bool DataImpl::addAttr(Attribute attr) {
     return true;
   }
 }
-bool DataImpl::eraseName(ID name) {
+inline bool DataImpl::eraseName(ID name) {
   for(Size i=0; i<_names.size(); ++i){
     if(_names[i] == name) {
       std::swap(_names[i], _names.back());
@@ -115,7 +115,7 @@ bool DataImpl::eraseName(ID name) {
   }
   return false;
 }
-bool DataImpl::eraseProp(ID prop) {
+inline bool DataImpl::eraseProp(ID prop) {
   for(Size i=0; i<_props.size(); ++i){
     if(_props[i] == prop) {
       std::swap(_props[i], _props.back());
@@ -125,7 +125,7 @@ bool DataImpl::eraseProp(ID prop) {
   }
   return false;
 }
-bool DataImpl::eraseAttr(ID attr) {
+inline bool DataImpl::eraseAttr(ID attr) {
   for(Size i=0; i<_attrs.size(); ++i){
     if(_attrs[i]._id == attr) {
       std::swap(_attrs[i], _attrs.back());
@@ -135,7 +135,7 @@ bool DataImpl::eraseAttr(ID attr) {
   }
   return false;
 }
-void DataImpl::clear() {
+inline void DataImpl::clear() {
   _names.clear();
   _props.clear();
   _attrs.clear();

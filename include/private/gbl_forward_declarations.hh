@@ -18,6 +18,8 @@ class Port;
 class InstancePort;
 class ModulePort;
 
+class FlatView;
+
 // Implementation
 
 namespace internal {
