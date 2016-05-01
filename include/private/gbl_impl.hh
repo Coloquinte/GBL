@@ -1,3 +1,4 @@
+// Copyright (C) 2016 Gabriel Gouvine - All Rights Reserved
 
 #ifndef GBL_IMPL_HH
 #define GBL_IMPL_HH
@@ -258,14 +259,15 @@ inline EltRef::EltRef() : _ptr(nullptr), _ind(-1) {}
 inline EltRef::EltRef(internal::ModuleImpl *ptr, Size ind) : _ptr(ptr), _ind(ind) {}
 inline Wire::Wire(internal::ModuleImpl *ptr, Size ind) : EltRef(ptr, ind) {}
 inline Node::Node(internal::ModuleImpl *ptr, Size ind) : EltRef(ptr, ind) {}
-inline EltRef& Node::ref() { return *this; }
-inline EltRef& Wire::ref() { return *this; }
+inline EltRef Node::ref() const { return *this; }
+inline EltRef Wire::ref() const { return *this; }
 
 inline Instance::Instance(const Node& node) : Node(node) { assert(isInstance()); }
 
 inline PortRef::PortRef() : _ptr(nullptr), _instInd(-1), _portInd(-1) {}
 inline PortRef::PortRef(internal::ModuleImpl *ptr, Size instInd, Size portInd) : _ptr(ptr), _instInd(instInd), _portInd(portInd) {}
 inline Port::Port(internal::ModuleImpl *ptr, Size instInd, Size portInd) : PortRef(ptr, instInd, portInd) {}
+inline PortRef Port::ref() const { return *this; }
 
 inline ModulePort::ModulePort(const Port& port) : Port(port) { assert(isModulePort()); }
 inline InstancePort::InstancePort(const Port& port) : Port(port) { assert(isInstancePort()); }

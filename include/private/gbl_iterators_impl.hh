@@ -1,3 +1,4 @@
+// Copyright (C) 2016 Gabriel Gouvine - All Rights Reserved
 
 #ifndef GBL_ITERATORS_HH
 #define GBL_ITERATORS_HH

@@ -1,3 +1,4 @@
+// Copyright (C) 2016 Gabriel Gouvine - All Rights Reserved
 
 #ifndef GBL_DATA_IMPL_HH
 #define GBL_DATA_IMPL_HH

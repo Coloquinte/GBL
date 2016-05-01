@@ -1,3 +1,5 @@
+// Copyright (C) 2016 Gabriel Gouvine - All Rights Reserved
+
 #ifndef GBL_DB_HH
 #define GBL_DB_HH
 
@@ -39,7 +41,7 @@ class Wire : protected EltRef {
   bool isValid();
 
   // Internal use
-  EltRef& ref();
+  EltRef ref() const;
   friend Port;
 };
 
@@ -76,7 +78,7 @@ class Node : protected EltRef {
   bool isValid();
 
   // Internal use
-  EltRef& ref();
+  EltRef ref() const;
   friend ModulePort;
   friend InstancePort;
 };
@@ -119,8 +121,6 @@ class Module : public Node {
 
   bool operator==(const Module&) const;
   bool operator!=(const Module&) const;
-
-  friend FlatView;
 };
 
 
@@ -170,6 +170,9 @@ class Port : protected PortRef {
   bool operator==(const Port&) const;
   bool operator!=(const Port&) const;
   bool isValid();
+
+  // Internal use
+  PortRef ref() const;
 };
 
 class InstancePort : public Port {
