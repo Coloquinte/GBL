@@ -1,3 +1,4 @@
+// Copyright (C) 2016 Gabriel Gouvine - All Rights Reserved
 
 #ifndef GBL_TRANSLATOR_HH
 #define GBL_TRANSLATOR_HH

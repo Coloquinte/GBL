@@ -16,11 +16,20 @@ int main() {
     mods.push_back(Module::createHier());
     for (int i=0; i<designDepth; ++i) {
         Module last = Module::createHier();
+        Instance d1 = mods.back().createInstance(last);
         mods.back().createInstance(last);
+        Instance d2 = mods.back().createInstance(last);
         mods.back().createInstance(last);
+        d1.destroy();
+        d2.destroy();
         mods.push_back(last);
     }
     FlatView flatview(mods.front());
+    for (int i=0; i<designDepth; ++i) {
+        if (flatview.getNumFlatInstanciations(mods[i]) != 1lu << i) {
+            abort();
+        }
+    }
     return 0;
 }
 
