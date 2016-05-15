@@ -12,13 +12,18 @@
 
 namespace gbl {
 
-typedef std::uint64_t FlatSize;
-
-const Size InvalidIndex = -1;
-const FlatSize InvalidFlatIndex = -1;
-
 // Reference for a flat node or wire
-struct FlatRef {
+class FlatRef {
+    public:
+    FlatRef(const FlatView& view, Size modInd, Size ind, Size gblInd, FlatSize flatInd)
+        : _view(view)
+        , _flatInd(flatInd)
+        , _modInd(modInd)
+        , _ind(ind)
+        , _gblIndex(gblInd)
+        {}
+
+    private:
     const FlatView& _view;
     // Index in the flat view: the main identifier
     FlatSize _flatInd;
@@ -28,23 +33,6 @@ struct FlatRef {
     Size _ind;
     // Index of the object (wire or node) in the usual gbl view
     Size _gblIndex;
-
-    FlatRef(const FlatView& view, Size modInd, Size ind, Size gblInd, FlatSize flatInd)
-        : _view(view)
-        , _flatInd(flatInd)
-        , _modInd(modInd)
-        , _ind(ind)
-        , _gblIndex(gblInd)
-        {}
-};
-
-class FlatModule : protected FlatRef {
-};
-class FlatInstance : protected FlatRef {
-};
-class FlatWire : protected FlatRef {
-};
-class FlatPort : protected FlatRef {
 };
 
 /*
@@ -133,6 +121,8 @@ private:
 
     // Contiguous indexing for transhierarchical wires
     // TODO
+
+    friend FlatRef;
 };
 
 inline Size bisectIndex(const std::vector<FlatSize>& vec, FlatSize flatIndex) {

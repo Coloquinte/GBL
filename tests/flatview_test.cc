@@ -12,6 +12,8 @@ using namespace std;
 int main() {
     // Create a huge design with 2^60 flat instances to check that the structure doesn't consume a linear amount of memory
     const int designDepth = 59;
+    const int numWires = 10;
+    const int numPorts = 5;
     std::vector<Module> mods;
     mods.push_back(Module::createHier());
     for (int i=0; i<designDepth; ++i) {
@@ -23,6 +25,13 @@ int main() {
         d1.destroy();
         d2.destroy();
         mods.push_back(last);
+
+        for (int j=0; j<numWires; ++j) {
+            last.createWire();
+        }
+        for (int j=0; j<numPorts; ++j) {
+            last.createPort();
+        }
     }
     FlatView flatview(mods.front());
     for (int i=0; i<designDepth; ++i) {

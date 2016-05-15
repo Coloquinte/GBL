@@ -9,6 +9,11 @@ namespace gbl {
 
 typedef std::uint32_t ID;
 typedef std::uint32_t Size;
+typedef std::uint64_t FlatSize;
+
+const Size InvalidIndex = -1;
+const FlatSize InvalidFlatIndex = -1;
+
 
 // Main classes
 
