@@ -8,8 +8,9 @@
 namespace gbl {
 
 /************************************************************************
- * Classes to be used internally to reference the storage
+ * Proxy classes to access the database
  ************************************************************************/
+
 class Wire : protected EltRef {
   public:
   typedef internal::WirePortIterator  PortIterator;
@@ -196,6 +197,158 @@ class ModulePort : public Port {
 
   ModulePort() {}
   explicit ModulePort(const Port& port);
+};
+
+/************************************************************************
+ * Flat view of the database
+ ************************************************************************/
+
+class FlatWire : protected FlatEltRef {
+  public:
+  typedef internal::FlatWirePortIterator  PortIterator;
+  typedef Container<PortIterator>         Ports;
+
+  public:
+  FlatModule getParentModule();
+
+  // Access
+  Ports ports();
+
+  bool hasName(ID id);
+  bool hasProperty(ID id);
+
+  Names names();
+  Properties properties();
+
+  explicit FlatWire(const FlatEltRef&);
+
+  bool operator==(const FlatWire&) const;
+  bool operator!=(const FlatWire&) const;
+  bool isValid();
+
+  // Internal use
+  FlatEltRef ref() const;
+  friend FlatPort;
+};
+
+class FlatNode : protected FlatEltRef {
+  public:
+  typedef internal::FlatNodePortIterator  PortIterator;
+  typedef Container<PortIterator>         Ports;
+
+  public:
+  bool isModule();
+  bool isInstance();
+  FlatModule getParentModule();
+
+  // Access
+  Ports ports();
+
+  bool hasName(ID id);
+  bool hasProperty(ID id);
+
+  Names names();
+  Properties properties();
+
+  explicit FlatNode(const FlatEltRef&);
+
+  bool operator==(const FlatNode&) const;
+  bool operator!=(const FlatNode&) const;
+  bool isValid();
+
+  // Internal use
+  FlatEltRef ref() const;
+  friend FlatModulePort;
+  friend FlatInstancePort;
+};
+
+class FlatModule : public FlatNode {
+  public:
+  typedef internal::FlatWireIterator       WireIterator;
+  typedef internal::FlatNodeIterator       NodeIterator;
+  typedef internal::FlatInstanceIterator   InstanceIterator;
+  typedef internal::FlatModulePortIterator PortIterator;
+
+  typedef Container<WireIterator>     Wires;
+  typedef Container<NodeIterator>     Nodes;
+  typedef Container<InstanceIterator> Instances;
+  typedef Container<PortIterator>     Ports;
+
+  public:
+  FlatInstance getUpInstance();
+
+  bool isLeaf();
+  bool isHier();
+
+  // Access
+  Ports ports();
+  Wires wires();
+  Nodes nodes();
+  Instances instances();
+
+  bool operator==(const FlatModule&) const;
+  bool operator!=(const FlatModule&) const;
+
+  explicit FlatModule(const FlatNode&);
+  explicit FlatModule(const FlatEltRef&);
+};
+
+
+class FlatInstance : public FlatNode {
+  public:
+  typedef internal::FlatInstancePortIterator PortIterator;
+  typedef Container<PortIterator>            Ports;
+
+  public:
+  FlatModule getDownModule();
+
+  // Access
+  Ports ports();
+
+  explicit FlatInstance(const FlatNode& n);
+  explicit FlatInstance(const FlatEltRef&);
+};
+
+class FlatPort : protected FlatPortRef {
+  public:
+  bool isConnected();
+
+  bool hasName(ID id);
+  bool hasProperty(ID id);
+
+  Names names();
+  Properties properties();
+
+  FlatModule getParentModule();
+  FlatNode getNode();
+  bool isInstancePort();
+  bool isModulePort();
+
+  bool operator==(const FlatPort&) const;
+  bool operator!=(const FlatPort&) const;
+  bool isValid();
+
+  // Internal use
+  FlatPortRef ref() const;
+
+  explicit FlatPort(const FlatPortRef&);
+};
+
+class FlatInstancePort : public FlatPort {
+  public:
+  FlatModulePort getDownPort();
+  FlatInstance getInstance();
+
+  explicit FlatInstancePort(const FlatPort&);
+  explicit FlatInstancePort(const FlatPortRef&);
+};
+
+class FlatModulePort : public FlatPort {
+  public:
+  FlatInstancePort getUpPort();
+
+  explicit FlatModulePort(const FlatPort&);
+  explicit FlatModulePort(const FlatPortRef&);
 };
 
 } // End namespace gbl

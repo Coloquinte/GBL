@@ -18,11 +18,20 @@ const FlatSize InvalidFlatIndex = -1;
 // Main classes
 
 class Module;
-class Wire;
+class Node;
 class Instance;
+class Wire;
 class Port;
 class InstancePort;
 class ModulePort;
+
+class FlatModule;
+class FlatNode;
+class FlatInstance;
+class FlatWire;
+class FlatPort;
+class FlatInstancePort;
+class FlatModulePort;
 
 class FlatView;
 
@@ -67,6 +76,16 @@ typedef TransformIterator<FilterIterator<EltRefInputIterator, WireFilter>, WireT
 typedef TransformIterator<FilterIterator<EltRefInputIterator, NodeFilter>, NodeTransform> NodeIterator;
 typedef TransformIterator<FilterIterator<NodeIterator, InstanceFilter>, InstanceTransform> InstanceIterator;
 
+class FlatTransform;
+
+typedef TransformIterator<WireIterator,         FlatTransform> FlatWireIterator;
+typedef TransformIterator<NodeIterator,         FlatTransform> FlatNodeIterator;
+typedef TransformIterator<InstanceIterator,     FlatTransform> FlatInstanceIterator;
+typedef TransformIterator<WirePortIterator,     FlatTransform> FlatWirePortIterator;
+typedef TransformIterator<NodePortIterator,     FlatTransform> FlatNodePortIterator;
+typedef TransformIterator<InstancePortIterator, FlatTransform> FlatInstancePortIterator;
+typedef TransformIterator<ModulePortIterator,   FlatTransform> FlatModulePortIterator;
+
 typedef const ID* NameIterator;
 typedef const ID* PropertyIterator;
 }
@@ -98,6 +117,28 @@ struct PortRef {
   internal::ModuleImpl *_ptr;
   Size _instInd;
   Size _portInd;
+};
+
+struct FlatEltRef {
+  bool operator==(const FlatEltRef&) const;
+  bool operator!=(const FlatEltRef&) const;
+
+  const FlatView& _view;
+  EltRef _ref;
+  FlatSize _index;
+
+  FlatEltRef(EltRef ref, FlatSize index, const FlatView& view);
+};
+
+struct FlatPortRef {
+  bool operator==(const FlatPortRef&) const;
+  bool operator!=(const FlatPortRef&) const;
+
+  const FlatView& _view;
+  PortRef _ref;
+  FlatSize _index;
+
+  FlatPortRef(PortRef ref, FlatSize index, const FlatView& view);
 };
 
 typedef Container<internal::NameIterator>     Names;

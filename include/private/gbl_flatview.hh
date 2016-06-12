@@ -12,29 +12,6 @@
 
 namespace gbl {
 
-// Reference for a flat node or wire
-class FlatRef {
-    public:
-    FlatRef(const FlatView& view, Size modInd, Size ind, Size gblInd, FlatSize flatInd)
-        : _view(view)
-        , _flatInd(flatInd)
-        , _modInd(modInd)
-        , _ind(ind)
-        , _gblIndex(gblInd)
-        {}
-
-    private:
-    const FlatView& _view;
-    // Index in the flat view: the main identifier
-    FlatSize _flatInd;
-    // Index of the parent module in the FlatView
-    Size _modInd;
-    // Index in the parent (or -1 for a module)
-    Size _ind;
-    // Index of the object (wire or node) in the usual gbl view
-    Size _gblIndex;
-};
-
 /*
  *
  */
@@ -43,10 +20,6 @@ public:
     FlatView(Module topModule);
 
     void selfcheck() const;
-
-    FlatRef getModFlatRef(FlatSize flatIndex) const;
-    FlatRef getInstFlatRef(FlatSize flatIndex) const;
-    FlatRef getWireFlatRef(FlatSize flatIndex) const;
 
     FlatSize beginIndex(Node node) const;
     FlatSize endIndex(Node node) const;
@@ -57,6 +30,7 @@ public:
     FlatSize getNumFlatInstanciations(Wire wire) const;
 
 private:
+    // TODO: parent info is only instance + flat index offset; child info is only flat index offset
     struct HierInfo {
         // Offset between child and parent flat indexing ranges
         FlatSize _offset;
@@ -118,11 +92,6 @@ private:
     std::vector<FlatSize> _portEndIndexs;
     std::vector<std::vector<Size> > _ports;
     std::vector<std::vector<Size> > _portHierToInternal;
-
-    // Contiguous indexing for transhierarchical wires
-    // TODO
-
-    friend FlatRef;
 };
 
 inline Size bisectIndex(const std::vector<FlatSize>& vec, FlatSize flatIndex) {
@@ -144,6 +113,7 @@ inline Size FlatView::getPortModIndex(FlatSize flatIndex) const {
     return bisectIndex(_portEndIndexs, flatIndex);
 }
 
+/*
 inline FlatRef FlatView::getModFlatRef(FlatSize flatIndex) const {
     Size modInd = getModIndex(flatIndex);
     return FlatRef(*this, modInd, -1, 0, flatIndex);
@@ -164,20 +134,20 @@ inline FlatRef FlatView::getWireFlatRef(FlatSize flatIndex) const {
     Size wireInd = _wires[modInd][indInParent];
     return FlatRef(*this, modInd, indInParent, wireInd, flatIndex);
 }
+*/
 
 inline Size FlatView::getModIndex(Module module) const {
     return _mod2Index.at(module.ref()._ptr);
 }
-inline Size FlatView::getRepresentantModIndex(Node node) const {
-    return _mod2Index.at(node.ref()._ptr->_nodes[node.ref()._ind]._instanciation);
-}
 
+/*
 inline FlatSize FlatView::beginIndex(Node node) const {
     return _modEndIndexs[getRepresentantModIndex(node)];
 }
 inline FlatSize FlatView::endIndex(Node node) const {
     return _modEndIndexs[getRepresentantModIndex(node) + 1];
 }
+*/
 inline FlatSize FlatView::beginIndex(Wire wire) const {
     Size modInd = getModIndex(wire.getParentModule());
     FlatSize wireIndex = _wireHierToInternal[modInd][wire.ref()._ind];
@@ -193,7 +163,7 @@ inline FlatSize FlatView::getNumFlatInstanciations(Size modIndex) const {
     return _modEndIndexs[modIndex+1] - _modEndIndexs[modIndex];
 }
 inline FlatSize FlatView::getNumFlatInstanciations(Node node) const {
-    return getNumFlatInstanciations(getRepresentantModIndex(node));
+    return getNumFlatInstanciations(getModIndex(node.getParentModule()));
 }
 inline FlatSize FlatView::getNumFlatInstanciations(Wire wire) const {
     return getNumFlatInstanciations(getModIndex(wire.getParentModule()));

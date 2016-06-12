@@ -159,10 +159,6 @@ struct ModuleImpl {
   ModuleImpl(bool leaf);
 };
 
-/************************************************************************
- * Implementation of the main API
- ************************************************************************/
-
 inline
 ModuleImpl::ModuleImpl(bool leaf)
 : _refcnt(0)
@@ -181,6 +177,10 @@ NodeImpl::NodeImpl()
 }
 
 } // End namespace gbl::internal
+
+/************************************************************************
+ * Implementation of the main API
+ ************************************************************************/
 
 inline
 Module::Module(internal::ModuleImpl* mod)
@@ -407,6 +407,18 @@ inline bool PortRef::operator==(const PortRef& o) const { return _ptr == o._ptr 
 inline bool PortRef::operator!=(const PortRef& o) const { return _ptr != o._ptr || _instInd != o._instInd || _portInd != o._portInd; }
 inline bool Port::operator==(const Port& o) const { return PortRef::operator==(o); }
 inline bool Port::operator!=(const Port& o) const { return PortRef::operator!=(o); }
+
+inline bool FlatEltRef::operator==(const FlatEltRef& o) const { return _ref == o._ref && _index == o._index; }
+inline bool FlatEltRef::operator!=(const FlatEltRef& o) const { return _ref != o._ref || _index != o._index; }
+inline bool FlatNode::operator==(const FlatNode& o) const { return FlatEltRef::operator==(o); }
+inline bool FlatNode::operator!=(const FlatNode& o) const { return FlatEltRef::operator!=(o); }
+inline bool FlatWire::operator==(const FlatWire& o) const { return FlatEltRef::operator==(o); }
+inline bool FlatWire::operator!=(const FlatWire& o) const { return FlatEltRef::operator!=(o); }
+
+inline bool FlatPortRef::operator==(const FlatPortRef& o) const { return _ref == o._ref && _index == o._index; }
+inline bool FlatPortRef::operator!=(const FlatPortRef& o) const { return _ref != o._ref || _index != o._index; }
+inline bool FlatPort::operator==(const FlatPort& o) const { return FlatPortRef::operator==(o); }
+inline bool FlatPort::operator!=(const FlatPort& o) const { return FlatPortRef::operator!=(o); }
 
 inline bool EltRef::isValidWireRef() {
     return _ptr != nullptr

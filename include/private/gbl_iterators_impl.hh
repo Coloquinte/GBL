@@ -147,6 +147,24 @@ struct WirePortRefTransform {
         return Port(ref._ptr, wref._obj_id, wref._ind);
     }
 };
+
+class FlatTransform {
+    public:
+    FlatModule       operator()(Module module)      { return FlatModule       (FlatEltRef(module.ref()  , _index, _view)); }
+    FlatNode         operator()(Node node)          { return FlatNode         (FlatEltRef(node.ref()    , _index, _view)); }
+    FlatInstance     operator()(Instance instance)  { return FlatInstance     (FlatEltRef(instance.ref(), _index, _view)); }
+    FlatWire         operator()(Wire wire)          { return FlatWire         (FlatEltRef(wire.ref()    , _index, _view)); }
+    FlatPort         operator()(Port port)          { return FlatPort         (FlatPortRef(port.ref()   , _index, _view)); }
+    FlatInstancePort operator()(InstancePort port)  { return FlatInstancePort (FlatPortRef(port.ref()   , _index, _view)); }
+    FlatModulePort   operator()(ModulePort port)    { return FlatModulePort   (FlatPortRef(port.ref()   , _index, _view)); }
+
+    FlatTransform(FlatSize index, const FlatView& view) : _index(index), _view(view) {}
+
+    private:
+    FlatSize _index;
+    const FlatView& _view;
+};
+
 } // End namespace gbl::internal
 
 template<class InputIterator, class UnaryFunction>
