@@ -11,7 +11,7 @@ namespace gbl {
  * Proxy classes to access the database
  ************************************************************************/
 
-class Wire : protected EltRef {
+class Wire {
   public:
   typedef internal::WirePortIterator  PortIterator;
   typedef Container<PortIterator>     Ports;
@@ -43,10 +43,14 @@ class Wire : protected EltRef {
 
   // Internal use
   EltRef ref() const;
+
+  protected:
+  EltRef _ref;
+
   friend Port;
 };
 
-class Node : protected EltRef {
+class Node {
   public:
   typedef internal::NodePortIterator  PortIterator;
   typedef Container<PortIterator>     Ports;
@@ -80,6 +84,10 @@ class Node : protected EltRef {
 
   // Internal use
   EltRef ref() const;
+
+  protected:
+  EltRef _ref;
+
   friend ModulePort;
   friend InstancePort;
 };
@@ -144,7 +152,7 @@ class Instance : public Node {
   explicit Instance(const Node& n);
 };
 
-class Port : protected PortRef {
+class Port {
   public:
   bool isConnected();
   void disconnect();
@@ -174,6 +182,9 @@ class Port : protected PortRef {
 
   // Internal use
   PortRef ref() const;
+
+  protected:
+  PortRef _ref;
 };
 
 class InstancePort : public Port {
@@ -203,7 +214,7 @@ class ModulePort : public Port {
  * Flat view of the database
  ************************************************************************/
 
-class FlatWire : protected FlatEltRef {
+class FlatWire {
   public:
   typedef internal::FlatWirePortIterator  PortIterator;
   typedef Container<PortIterator>         Ports;
@@ -228,10 +239,14 @@ class FlatWire : protected FlatEltRef {
 
   // Internal use
   FlatEltRef ref() const;
+
+  protected:
+  FlatEltRef _ref;
+
   friend FlatPort;
 };
 
-class FlatNode : protected FlatEltRef {
+class FlatNode {
   public:
   typedef internal::FlatNodePortIterator  PortIterator;
   typedef Container<PortIterator>         Ports;
@@ -258,6 +273,10 @@ class FlatNode : protected FlatEltRef {
 
   // Internal use
   FlatEltRef ref() const;
+
+  protected:
+  FlatEltRef _ref;
+
   friend FlatModulePort;
   friend FlatInstancePort;
 };
@@ -309,7 +328,7 @@ class FlatInstance : public FlatNode {
   explicit FlatInstance(const FlatEltRef&);
 };
 
-class FlatPort : protected FlatPortRef {
+class FlatPort {
   public:
   bool isConnected();
 
@@ -324,6 +343,8 @@ class FlatPort : protected FlatPortRef {
   bool isInstancePort();
   bool isModulePort();
 
+  explicit FlatPort(const FlatPortRef&);
+
   bool operator==(const FlatPort&) const;
   bool operator!=(const FlatPort&) const;
   bool isValid();
@@ -331,7 +352,8 @@ class FlatPort : protected FlatPortRef {
   // Internal use
   FlatPortRef ref() const;
 
-  explicit FlatPort(const FlatPortRef&);
+  protected:
+  FlatPortRef _ref;
 };
 
 class FlatInstancePort : public FlatPort {

@@ -199,8 +199,8 @@ inline Module::Wires
 Module::wires() {
     return getTransformContainer(
         getFilterContainer(
-            internal::EltRefInputIterator(EltRef(_ptr, 0)),
-            internal::EltRefInputIterator(EltRef(_ptr, _ptr->_wires.size())),
+            internal::EltRefInputIterator(EltRef(_ref._ptr, 0)),
+            internal::EltRefInputIterator(EltRef(_ref._ptr, _ref._ptr->_wires.size())),
             internal::WireFilter()
         ), internal::WireTransform()
     );
@@ -210,8 +210,8 @@ inline Module::Nodes
 Module::nodes() {
     return getTransformContainer(
         getFilterContainer(
-            internal::EltRefInputIterator(EltRef(_ptr, 0)),
-            internal::EltRefInputIterator(EltRef(_ptr, _ptr->_nodes.size())),
+            internal::EltRefInputIterator(EltRef(_ref._ptr, 0)),
+            internal::EltRefInputIterator(EltRef(_ref._ptr, _ref._ptr->_nodes.size())),
             internal::NodeFilter()
         ), internal::NodeTransform()
     );
@@ -228,8 +228,8 @@ Module::instances() {
 inline Node::Ports
 Node::ports() {
     return getTransformContainer(getFilterContainer(
-        internal::PortRefInputIterator(PortRef(_ptr, _ind, 0)),
-        internal::PortRefInputIterator(PortRef(_ptr, _ind, _ptr->_nodes[_ind]._instanciation->_nodes[0]._refs.size())),
+        internal::PortRefInputIterator(PortRef(_ref._ptr, _ref._ind, 0)),
+        internal::PortRefInputIterator(PortRef(_ref._ptr, _ref._ind, _ref._ptr->_nodes[_ref._ind]._instanciation->_nodes[0]._refs.size())),
         internal::NodePortFilter()
     ), internal::NodePortRefTransform());
 }
@@ -237,8 +237,8 @@ Node::ports() {
 inline Wire::Ports
 Wire::ports() {
     return getTransformContainer(getFilterContainer(
-        internal::PortRefInputIterator(PortRef(_ptr, _ind, 0)),
-        internal::PortRefInputIterator(PortRef(_ptr, _ind, _ptr->_wires[_ind]._refs.size())),
+        internal::PortRefInputIterator(PortRef(_ref._ptr, _ref._ind, 0)),
+        internal::PortRefInputIterator(PortRef(_ref._ptr, _ref._ind, _ref._ptr->_wires[_ref._ind]._refs.size())),
         internal::WirePortFilter()
     ), internal::WirePortRefTransform());
 }
@@ -254,30 +254,30 @@ Module::ports() {
 }
 
 inline Names Node::names() {
-    const internal::DataImpl& data = _ptr->_nodes[_ind]._data;
+    const internal::DataImpl& data = _ref._ptr->_nodes[_ref._ind]._data;
     return Names(data.beginNames(), data.endNames());
 }
 inline Properties Node::properties() {
-    const internal::DataImpl& data = _ptr->_nodes[_ind]._data;
+    const internal::DataImpl& data = _ref._ptr->_nodes[_ref._ind]._data;
     return Properties(data.beginProps(), data.endProps());
 }
 inline Names Wire::names() {
-    const internal::DataImpl& data = _ptr->_wires[_ind]._data;
+    const internal::DataImpl& data = _ref._ptr->_wires[_ref._ind]._data;
     return Names(data.beginNames(), data.endNames());
 }
 inline Properties Wire::properties() {
-    const internal::DataImpl& data = _ptr->_wires[_ind]._data;
+    const internal::DataImpl& data = _ref._ptr->_wires[_ref._ind]._data;
     return Properties(data.beginProps(), data.endProps());
 }
 inline Names Port::names() {
-    const std::vector<internal::DataImpl>& refData = _ptr->_nodes[_instInd]._refData;
-    if (refData.size() <= _portInd) return Names(nullptr, nullptr);
-    else return Names(refData[_portInd].beginNames(), refData[_portInd].endNames());
+    const std::vector<internal::DataImpl>& refData = _ref._ptr->_nodes[_ref._instInd]._refData;
+    if (refData.size() <= _ref._portInd) return Names(nullptr, nullptr);
+    else return Names(refData[_ref._portInd].beginNames(), refData[_ref._portInd].endNames());
 }
 inline Properties Port::properties() {
-    const std::vector<internal::DataImpl>& refData = _ptr->_nodes[_instInd]._refData;
-    if (refData.size() <= _portInd) return Properties(nullptr, nullptr);
-    else return Names(refData[_portInd].beginProps(), refData[_portInd].endProps());
+    const std::vector<internal::DataImpl>& refData = _ref._ptr->_nodes[_ref._instInd]._refData;
+    if (refData.size() <= _ref._portInd) return Properties(nullptr, nullptr);
+    else return Names(refData[_ref._portInd].beginProps(), refData[_ref._portInd].endProps());
 }
 
 } // End namespace gbl
