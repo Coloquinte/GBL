@@ -11,9 +11,10 @@
 #include <algorithm>
 
 namespace gbl {
+namespace internal {
 
 /*
- *
+ * Internal datastructure for flat netlist view
  */
 class FlatView {
 public:
@@ -103,6 +104,10 @@ inline Size bisectIndex(const std::vector<FlatSize>& vec, FlatSize flatIndex) {
     return ind - 1;
 }
 
+inline Size FlatView::getModIndex(Module module) const {
+    return _mod2Index.at(module.ref()._ptr);
+}
+
 inline Size FlatView::getModIndex(FlatSize flatIndex) const {
     return bisectIndex(_modEndIndexs, flatIndex);
 }
@@ -111,52 +116,6 @@ inline Size FlatView::getWireModIndex(FlatSize flatIndex) const {
 }
 inline Size FlatView::getPortModIndex(FlatSize flatIndex) const {
     return bisectIndex(_portEndIndexs, flatIndex);
-}
-
-/*
-inline FlatRef FlatView::getModFlatRef(FlatSize flatIndex) const {
-    Size modInd = getModIndex(flatIndex);
-    return FlatRef(*this, modInd, -1, 0, flatIndex);
-}
-inline FlatRef FlatView::getInstFlatRef(FlatSize flatIndex) const {
-    // Index of the instanciated module
-    Size modInd = getModIndex(flatIndex);
-    // Index of the parent and the instance in the parent
-    Size locParentInd = bisectIndex(_parents[modInd]._instEndIndexs, flatIndex);
-    Size parentInd   = _parents[modInd]._upInfos[locParentInd]._moduleIndex;
-    Size indInParent = _parents[modInd]._upInfos[locParentInd]._associatedIndex;
-    Size instInd     = _parents[modInd]._upInfos[locParentInd]._instanceIndex;
-    return FlatRef(*this, parentInd, indInParent, instInd, flatIndex);
-}
-inline FlatRef FlatView::getWireFlatRef(FlatSize flatIndex) const {
-    Size modInd = getWireModIndex(flatIndex);
-    Size indInParent = (flatIndex - _wireEndIndexs[modInd]) / _wires[modInd].size();
-    Size wireInd = _wires[modInd][indInParent];
-    return FlatRef(*this, modInd, indInParent, wireInd, flatIndex);
-}
-*/
-
-inline Size FlatView::getModIndex(Module module) const {
-    return _mod2Index.at(module.ref()._ptr);
-}
-
-/*
-inline FlatSize FlatView::beginIndex(Node node) const {
-    return _modEndIndexs[getRepresentantModIndex(node)];
-}
-inline FlatSize FlatView::endIndex(Node node) const {
-    return _modEndIndexs[getRepresentantModIndex(node) + 1];
-}
-*/
-inline FlatSize FlatView::beginIndex(Wire wire) const {
-    Size modInd = getModIndex(wire.getParentModule());
-    FlatSize wireIndex = _wireHierToInternal[modInd][wire.ref()._ind];
-    return _wireEndIndexs[modInd] + getNumFlatInstanciations(modInd) * wireIndex;
-}
-inline FlatSize FlatView::endIndex(Wire wire) const {
-    Size modInd = getModIndex(wire.getParentModule());
-    FlatSize wireIndex = _wireHierToInternal[modInd][wire.ref()._ind];
-    return _wireEndIndexs[modInd] + getNumFlatInstanciations(modInd) * (wireIndex+1);
 }
 
 inline FlatSize FlatView::getNumFlatInstanciations(Size modIndex) const {
@@ -169,6 +128,7 @@ inline FlatSize FlatView::getNumFlatInstanciations(Wire wire) const {
     return getNumFlatInstanciations(getModIndex(wire.getParentModule()));
 }
 
+} // End namespace internal
 } // End namespace gbl
 
 #endif

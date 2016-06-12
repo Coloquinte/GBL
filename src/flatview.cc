@@ -5,7 +5,9 @@
 #include <unordered_set>
 
 namespace gbl {
+namespace internal {
 
+namespace { // Helpers
 void visitModule(Module module, std::vector<internal::ModuleImpl*>& moduleOrder, std::unordered_set<internal::ModuleImpl*>& visited) {
     // Will ignore loops awkwardly for now; we could just error out if loops are present
     visited.insert(module.ref()._ptr);
@@ -17,6 +19,7 @@ void visitModule(Module module, std::vector<internal::ModuleImpl*>& moduleOrder,
     }
     moduleOrder.push_back(module.ref()._ptr);
 }
+} // End anonymous namespace
 
 FlatView::FlatView(Module topModule)
 : _topMod(topModule)
@@ -183,5 +186,6 @@ void FlatView::selfcheck() const {
     }
 }
 
+} // End namespace internal
 } // End namespace gbl
 

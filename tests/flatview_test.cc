@@ -7,6 +7,7 @@
 #include <random>
 
 using namespace gbl;
+using namespace gbl::internal;
 using namespace std;
 
 int main() {
