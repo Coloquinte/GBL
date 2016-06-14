@@ -40,6 +40,9 @@ int main() {
             abort();
         }
     }
+    if (!flatview.getTop().isTop()) {
+        abort();
+    }
     return 0;
 }
 

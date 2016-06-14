@@ -261,6 +261,8 @@ inline Wire::Wire(internal::ModuleImpl *ptr, Size ind) : _ref(ptr, ind) {}
 inline Node::Node(internal::ModuleImpl *ptr, Size ind) : _ref(ptr, ind) {}
 inline EltRef Node::ref() const { return _ref; }
 inline EltRef Wire::ref() const { return _ref; }
+inline FlatEltRef FlatNode::ref() const { return _ref; }
+inline FlatEltRef FlatWire::ref() const { return _ref; }
 
 inline Instance::Instance(const Node& node) : Node(node) { assert(isInstance()); }
 
@@ -268,6 +270,7 @@ inline PortRef::PortRef() : _ptr(nullptr), _instInd(-1), _portInd(-1) {}
 inline PortRef::PortRef(internal::ModuleImpl *ptr, Size instInd, Size portInd) : _ptr(ptr), _instInd(instInd), _portInd(portInd) {}
 inline Port::Port(internal::ModuleImpl *ptr, Size instInd, Size portInd) : _ref(ptr, instInd, portInd) {}
 inline PortRef Port::ref() const { return _ref; }
+inline FlatPortRef FlatPort::ref() const { return _ref; }
 
 inline ModulePort::ModulePort(const Port& port) : Port(port) { assert(isModulePort()); }
 inline InstancePort::InstancePort(const Port& port) : Port(port) { assert(isInstancePort()); }

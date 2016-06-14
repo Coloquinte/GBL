@@ -11,7 +11,6 @@
 #include <algorithm>
 
 namespace gbl {
-namespace internal {
 
 /*
  * Internal datastructure for flat netlist view
@@ -30,31 +29,33 @@ public:
     FlatSize getNumFlatInstanciations(Node node) const;
     FlatSize getNumFlatInstanciations(Wire wire) const;
 
+    FlatModule getTop() const;
+
 private:
-    // TODO: parent info is only instance + flat index offset; child info is only flat index offset
-    struct HierInfo {
-        // Offset between child and parent flat indexing ranges
+    struct DownInfo {
+        // Offset between child and parent flat indexing (local indexing, not the global contiguous one)
         FlatSize _offset;
-        // Index of the module (child or parent) in the FlatView
-        Size _moduleIndex;
-        // Index of the corresponding instance in the parent gbl module
-        Size _instanceIndex;
-        // Index of the HierInfo in the associated child/parent
-        Size _associatedIndex;
-        HierInfo(Size modInd=-1, Size instInd=-1, Size associatedIndex=-1, FlatSize offs=-1)
-            : _offset(offs)
-            , _moduleIndex(modInd)
-            , _instanceIndex(instInd)
-            , _associatedIndex(associatedIndex)
-            {}
+
+        DownInfo(FlatSize offs) : _offset(offs) {}
+    };
+    struct UpInfo {
+        // Offset between child and parent flat indexing (local indexing, not the global contiguous one)
+        FlatSize _offset;
+        Instance _parentInstance;
+
+        UpInfo(Instance inst, FlatSize offs) : _offset(offs), _parentInstance(inst) {}
     };
     struct ParentInfos {
+        // Interval for each parent instance 
         std::vector<FlatSize> _instEndIndexs;
-        std::vector<HierInfo> _upInfos;
+        std::vector<UpInfo>   _upInfos;
     };
     struct ChildInfos {
-        std::vector<HierInfo> _downInfos;
+        // Offset for each instance in the module (possibly InvalidFlatIndex for holes)
+        std::vector<DownInfo> _downInfos;
     };
+    friend FlatInstance;
+    friend FlatModule;
 
 private:
     Size getModIndex(FlatSize flatIndex) const;
@@ -71,9 +72,6 @@ private:
 
     // Basic module <--> index range bookkeeping
     std::vector<internal::ModuleImpl*>   _mods;
-    // Module to flat index range (_modEndIndexs[i] to _modEndIndexs[i+1] for module i)
-    std::vector<FlatSize> _modEndIndexs;
-
     // From Module to FlatModule
     std::unordered_map<internal::ModuleImpl*, Size> _mod2Index;
 
@@ -82,7 +80,9 @@ private:
     std::vector<ParentInfos> _parents;
     // Down instances
     std::vector<ChildInfos>  _children;
-    std::vector<std::vector<Size> > _instHierToInternal;
+
+    // Contiguous indexing for modules (_modEndIndexs[i] to _modEndIndexs[i+1])
+    std::vector<FlatSize> _modEndIndexs;
 
     // Contiguous indexing for wires
     std::vector<FlatSize> _wireEndIndexs;
@@ -128,7 +128,72 @@ inline FlatSize FlatView::getNumFlatInstanciations(Wire wire) const {
     return getNumFlatInstanciations(getModIndex(wire.getParentModule()));
 }
 
-} // End namespace internal
+inline FlatModule FlatView::getTop() const {
+    return FlatModule(FlatNode(FlatEltRef(_topMod.ref(), 0, *this)));
+}
+
+inline Wire FlatWire::getObject() {
+    return Wire(_ref._ref._ptr, _ref._ref._ind);
+}
+inline Node FlatNode::getObject() {
+    return Node(_ref._ref._ptr, _ref._ref._ind);
+}
+inline Instance FlatInstance::getObject() {
+    return Instance(FlatNode::getObject());
+}
+inline Module FlatModule::getObject() {
+    return Module(FlatNode::getObject().ref()._ptr);
+}
+inline Port FlatPort::getObject() {
+    return Port(_ref._ref._ptr, _ref._ref._instInd, _ref._ref._portInd);
+}
+inline InstancePort FlatInstancePort::getObject() {
+    return InstancePort(FlatPort::getObject());
+}
+inline ModulePort FlatModulePort::getObject() {
+    return ModulePort(FlatPort::getObject());
+}
+
+inline bool FlatModule::isTop() {
+    return operator==(_ref._view.getTop());
+}
+
+inline FlatEltRef::FlatEltRef(EltRef ref, FlatSize index, const FlatView& view) 
+: _view(view)
+, _ref(ref)
+, _index(index)
+{
+}
+
+inline FlatPortRef::FlatPortRef(PortRef ref, FlatSize index, const FlatView& view) 
+: _view(view)
+, _ref(ref)
+, _index(index)
+{
+}
+
+inline FlatNode::FlatNode(const FlatEltRef& ref) : _ref(ref) {}
+inline FlatPort::FlatPort(const FlatPortRef& ref) : _ref(ref) {}
+inline FlatModule::FlatModule(const FlatNode& node) : FlatNode(node) {}
+inline FlatInstance::FlatInstance(const FlatNode& node) : FlatNode(node) {}
+inline FlatModulePort::FlatModulePort(const FlatPort& port) : FlatPort(port) {}
+inline FlatInstancePort::FlatInstancePort(const FlatPort& port) : FlatPort(port) {}
+
+inline FlatInstance FlatModule::getUpInstance() {
+    FlatView::ParentInfos info = _ref._view._parents[_ref._view.getModIndex(getObject())];
+    Size index = bisectIndex(info._instEndIndexs, _ref._index);
+    FlatView::UpInfo up = info._upInfos[index];
+    assert(up._offset <= _ref._index);
+    FlatEltRef ref(up._parentInstance.ref(), _ref._index - up._offset, _ref._view);
+    return FlatInstance(FlatNode(ref));
+}
+
+inline FlatModule FlatInstance::getDownModule() {
+    FlatView::DownInfo down = _ref._view._children[_ref._view.getModIndex(getObject().getParentModule())]._downInfos[_ref._ref._ind];
+    FlatEltRef ref(getObject().getDownModule().ref(), _ref._index + down._offset, _ref._view);
+    return FlatModule(FlatNode(ref));
+}
+
 } // End namespace gbl
 
 #endif

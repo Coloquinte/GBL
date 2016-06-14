@@ -127,9 +127,6 @@ class Module : public Node {
   Module(const Module & module);
   Module& operator=(const Module & module);
   ~Module();
-
-  bool operator==(const Module&) const;
-  bool operator!=(const Module&) const;
 };
 
 
@@ -239,6 +236,7 @@ class FlatWire {
 
   // Internal use
   FlatEltRef ref() const;
+  Wire getObject();
 
   protected:
   FlatEltRef _ref;
@@ -273,6 +271,7 @@ class FlatNode {
 
   // Internal use
   FlatEltRef ref() const;
+  Node getObject();
 
   protected:
   FlatEltRef _ref;
@@ -298,6 +297,7 @@ class FlatModule : public FlatNode {
 
   bool isLeaf();
   bool isHier();
+  bool isTop();
 
   // Access
   Ports ports();
@@ -305,11 +305,9 @@ class FlatModule : public FlatNode {
   Nodes nodes();
   Instances instances();
 
-  bool operator==(const FlatModule&) const;
-  bool operator!=(const FlatModule&) const;
-
   explicit FlatModule(const FlatNode&);
   explicit FlatModule(const FlatEltRef&);
+  Module getObject();
 };
 
 
@@ -326,6 +324,7 @@ class FlatInstance : public FlatNode {
 
   explicit FlatInstance(const FlatNode& n);
   explicit FlatInstance(const FlatEltRef&);
+  Instance getObject();
 };
 
 class FlatPort {
@@ -351,6 +350,7 @@ class FlatPort {
 
   // Internal use
   FlatPortRef ref() const;
+  Port getObject();
 
   protected:
   FlatPortRef _ref;
@@ -363,6 +363,7 @@ class FlatInstancePort : public FlatPort {
 
   explicit FlatInstancePort(const FlatPort&);
   explicit FlatInstancePort(const FlatPortRef&);
+  InstancePort getObject();
 };
 
 class FlatModulePort : public FlatPort {
@@ -371,6 +372,7 @@ class FlatModulePort : public FlatPort {
 
   explicit FlatModulePort(const FlatPort&);
   explicit FlatModulePort(const FlatPortRef&);
+  ModulePort getObject();
 };
 
 } // End namespace gbl

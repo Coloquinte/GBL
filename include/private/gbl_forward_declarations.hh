@@ -32,6 +32,7 @@ class FlatWire;
 class FlatPort;
 class FlatInstancePort;
 class FlatModulePort;
+class FlatView;
 
 // Implementation
 
@@ -39,7 +40,6 @@ namespace internal {
 class ModuleImpl;
 class WireImpl;
 class NodeImpl;
-class FlatView;
 }
 
 // Iterators
@@ -122,22 +122,22 @@ struct FlatEltRef {
   bool operator==(const FlatEltRef&) const;
   bool operator!=(const FlatEltRef&) const;
 
-  const internal::FlatView& _view;
+  const FlatView& _view;
   EltRef _ref;
   FlatSize _index;
 
-  FlatEltRef(EltRef ref, FlatSize index, const internal::FlatView& view);
+  FlatEltRef(EltRef ref, FlatSize index, const FlatView& view);
 };
 
 struct FlatPortRef {
   bool operator==(const FlatPortRef&) const;
   bool operator!=(const FlatPortRef&) const;
 
-  const internal::FlatView& _view;
+  const FlatView& _view;
   PortRef _ref;
   FlatSize _index;
 
-  FlatPortRef(PortRef ref, FlatSize index, const internal::FlatView& view);
+  FlatPortRef(PortRef ref, FlatSize index, const FlatView& view);
 };
 
 typedef Container<internal::NameIterator>     Names;

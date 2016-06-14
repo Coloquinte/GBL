@@ -5,7 +5,6 @@
 #include <unordered_set>
 
 namespace gbl {
-namespace internal {
 
 namespace { // Helpers
 void visitModule(Module module, std::vector<internal::ModuleImpl*>& moduleOrder, std::unordered_set<internal::ModuleImpl*>& visited) {
@@ -34,7 +33,6 @@ FlatView::FlatView(Module topModule)
     _children.resize(_mods.size());
     _wires.resize(_mods.size());
     _ports.resize(_mods.size());
-    _instHierToInternal.resize(_mods.size());
     _wireHierToInternal.resize(_mods.size());
     _portHierToInternal.resize(_mods.size());
 
@@ -64,26 +62,24 @@ FlatView::FlatView(Module topModule)
 
     // Init each parent/child couple
     for (Size i=0; i<_mods.size(); ++i) {
-        _parents[i]._instEndIndexs.push_back(_modEndIndexs[i]);
+        _parents[i]._instEndIndexs.push_back(0);
     }
-    for (Size i=0; i<_mods.size(); ++i) {
-        Module module(_mods[i]);
+    for (Size modIndex=0; modIndex<_mods.size(); ++modIndex) {
+        Module module(_mods[modIndex]);
         for (Instance instance : module.instances()) {
-            Size downModIndex = _mod2Index[instance.getDownModule().ref()._ptr];
             Size instIndex = instance.ref()._ind;
-            std::vector<FlatSize>& instIndexs = _parents[downModIndex]._instEndIndexs;
-            FlatSize offset = instIndexs.back() - _modEndIndexs[i];
-            instIndexs.push_back(instIndexs.back() + flatSizes[i]);
+            Size downModIndex = _mod2Index[instance.getDownModule().ref()._ptr];
 
-            Size indexInParent = _parents[downModIndex]._upInfos.size();
-            Size indexInChild  = _children[i]._downInfos.size();
-            _parents[downModIndex]._upInfos.emplace_back(i, instIndex, indexInChild, offset);
-            _children[i]._downInfos.emplace_back(downModIndex, instIndex, indexInParent, offset);
-            while (_instHierToInternal[i].size() < instIndex) {
-                _instHierToInternal[i].push_back(InvalidIndex);
+            std::vector<FlatSize>& instIndexs = _parents[downModIndex]._instEndIndexs;
+            FlatSize offset = instIndexs.back();
+            instIndexs.push_back(instIndexs.back() + flatSizes[modIndex]);
+
+            _parents[downModIndex]._upInfos.emplace_back(instance, offset);
+            // Handle holes in the instance list
+            while(_children[modIndex]._downInfos.size() < instIndex) {
+                _children[modIndex]._downInfos.emplace_back(InvalidFlatIndex);
             }
-            _instHierToInternal[i].push_back(_children[i]._downInfos.size()-1);
-            assert(_instHierToInternal[i].size() == instIndex + 1);
+            _children[modIndex]._downInfos.emplace_back(offset);
         }
     }
 
@@ -119,7 +115,6 @@ void FlatView::selfcheck() const {
     assert(_modEndIndexs.size() == _mods.size() + 1);
     assert(_wires.size() == _mods.size());
     assert(_ports.size() == _mods.size());
-    assert(_instHierToInternal.size() == _mods.size());
     assert(_wireHierToInternal.size() == _mods.size());
     assert(_portHierToInternal.size() == _mods.size());
     assert(_wireEndIndexs.size() == _mods.size() + 1);
@@ -127,22 +122,15 @@ void FlatView::selfcheck() const {
 
     // Checks for all but the top Module
     for (Size i=1; i<_mods.size(); ++i) {
-        assert(_parents[i]._instEndIndexs.front() == _modEndIndexs[i]);
-        assert(_parents[i]._instEndIndexs.back() == _modEndIndexs[i+1]);
+        assert(_parents[i]._instEndIndexs.front() == 0);
+        assert(_parents[i]._instEndIndexs.back() == _modEndIndexs[i+1] - _modEndIndexs[i]);
         assert(_parents[i]._instEndIndexs.size() == _parents[i]._upInfos.size() + 1);
 
         for (Size j=0; j<_parents[i]._upInfos.size(); ++j) {
-            HierInfo upInfo = _parents[i]._upInfos[j];
-            Size parentInd = upInfo._moduleIndex;
-            Size indInParent = upInfo._associatedIndex;
-            assert(parentInd < i && indInParent < _children[parentInd]._downInfos.size());
-
-            HierInfo downInfo = _children[parentInd]._downInfos[indInParent];
-            assert(downInfo._associatedIndex == j);
-            assert(downInfo._moduleIndex == i);
-            assert(downInfo._instanceIndex == upInfo._instanceIndex);
-            assert(downInfo._instanceIndex != 0);
-            assert(downInfo._offset == upInfo._offset);
+            UpInfo upInfo = _parents[i]._upInfos[j];
+            Instance inst = upInfo._parentInstance;
+            Size parentInd = getModIndex(inst.getParentModule());
+            assert(parentInd < i);
         }
     }
 
@@ -151,24 +139,10 @@ void FlatView::selfcheck() const {
         // Test strictly ordered collections
         assert( std::is_sorted(_wires[i].begin(), _wires[i].end()) );
         assert( std::is_sorted(_ports[i].begin(), _ports[i].end()) );
-        assert( std::is_sorted(_children[i]._downInfos.begin(), _children[i]._downInfos.end(),
-            [](const HierInfo& a, const HierInfo& b) { return a._instanceIndex < b._instanceIndex; }
-        ) );
         assert( std::adjacent_find(_wires[i].begin(), _wires[i].end()) == _wires[i].end());
         assert( std::adjacent_find(_ports[i].begin(), _ports[i].end()) == _ports[i].end());
-        assert( std::adjacent_find(_children[i]._downInfos.begin(), _children[i]._downInfos.end(),
-            [](const HierInfo& a, const HierInfo& b) { return a._instanceIndex == b._instanceIndex; }
-        ) == _children[i]._downInfos.end() );
 
         // Test that we have a correct translation from and to hier indexes
-        for (Size j=0; j<_instHierToInternal[i].size(); ++j) {
-            Size flatInd = _instHierToInternal[i][j];
-            assert(flatInd == InvalidIndex || _children[i]._downInfos.at(flatInd)._instanceIndex == j);
-        }
-        for (Size j=0; j<_children[i]._downInfos.size(); ++j) {
-            Size hierInd = _children[i]._downInfos[j]._instanceIndex;
-            assert(_instHierToInternal[i].at(hierInd) == j);
-        }
         for (Size j=0; j<_wireHierToInternal[i].size(); ++j) {
             Size flatInd = _wireHierToInternal[i][j];
             assert(flatInd == InvalidIndex || _wires[i].at(flatInd) == j);
@@ -186,6 +160,5 @@ void FlatView::selfcheck() const {
     }
 }
 
-} // End namespace internal
 } // End namespace gbl
 
