@@ -183,17 +183,23 @@ NodeImpl::NodeImpl()
  ************************************************************************/
 
 inline
-Module::Module(internal::ModuleImpl* mod)
-: Node(mod, 0)
+Module::Module(const Node& node)
+: Node(node)
 {
+    assert(node.isModule());
     ++_ref._ptr->_refcnt;
 }
 
 inline
-Module::Module(const Module& module)
-: Node(module)
+Module::Module(internal::ModuleImpl* mod)
+: Module(Node(mod, 0))
 {
-    ++_ref._ptr->_refcnt;
+}
+
+inline
+Module::Module(const Module& module)
+: Module(Node(module))
+{
 }
 
 inline Module &
@@ -261,8 +267,6 @@ inline Wire::Wire(internal::ModuleImpl *ptr, Size ind) : _ref(ptr, ind) {}
 inline Node::Node(internal::ModuleImpl *ptr, Size ind) : _ref(ptr, ind) {}
 inline EltRef Node::ref() const { return _ref; }
 inline EltRef Wire::ref() const { return _ref; }
-inline FlatEltRef FlatNode::ref() const { return _ref; }
-inline FlatEltRef FlatWire::ref() const { return _ref; }
 
 inline Instance::Instance(const Node& node) : Node(node) { assert(isInstance()); }
 
@@ -270,13 +274,12 @@ inline PortRef::PortRef() : _ptr(nullptr), _instInd(-1), _portInd(-1) {}
 inline PortRef::PortRef(internal::ModuleImpl *ptr, Size instInd, Size portInd) : _ptr(ptr), _instInd(instInd), _portInd(portInd) {}
 inline Port::Port(internal::ModuleImpl *ptr, Size instInd, Size portInd) : _ref(ptr, instInd, portInd) {}
 inline PortRef Port::ref() const { return _ref; }
-inline FlatPortRef FlatPort::ref() const { return _ref; }
 
 inline ModulePort::ModulePort(const Port& port) : Port(port) { assert(isModulePort()); }
 inline InstancePort::InstancePort(const Port& port) : Port(port) { assert(isInstancePort()); }
 
-inline bool Node::isModule   () { return _ref._ind == 0; }
-inline bool Node::isInstance () { return _ref._ind != 0; }
+inline bool Node::isModule   () const { return _ref._ind == 0; }
+inline bool Node::isInstance () const { return _ref._ind != 0; }
 inline bool Port::isModulePort () { return getNode().isModule(); }
 inline bool Port::isInstancePort () { return getNode().isInstance(); }
 
@@ -318,6 +321,14 @@ Port::isConnected() {
         // May be invalid for a disconnected reference port
         return refvec[_ref._portInd].isValid() && refvec[_ref._portInd].isConnected();
     }
+}
+
+inline Wire
+Port::getWire() {
+    assert(isValid());
+    assert(isConnected());
+    const internal::Xref& instRef = _ref._ptr->_nodes[_ref._instInd]._refs[_ref._portInd];
+    return Wire(_ref._ptr, instRef._obj_id);
 }
 
 inline void
@@ -394,34 +405,34 @@ Wire::destroy() {
 inline void
 ModulePort::destroy() {
     // TODO: have some refcounting mecanism
+    if (isConnected()) {
+        disconnect();
+    }
     _ref._ptr->_nodes[0]._refs[_ref._portInd] = internal::Xref::Invalid();
     _ref._ptr->_nodes[0]._refs[_ref._portInd]._ind = _ref._ptr->_firstFreePort;
     _ref._ptr->_firstFreePort = _ref._portInd;
 }
 
 inline bool EltRef::operator==(const EltRef& o) const { return _ptr == o._ptr && _ind == o._ind; }
-inline bool EltRef::operator!=(const EltRef& o) const { return _ptr != o._ptr || _ind != o._ind; }
+inline bool EltRef::operator!=(const EltRef& o) const { return !operator==(o); }
 inline bool Node::operator==(const Node& o) const { return _ref == o._ref; }
 inline bool Node::operator!=(const Node& o) const { return _ref != o._ref; }
 inline bool Wire::operator==(const Wire& o) const { return _ref == o._ref; }
 inline bool Wire::operator!=(const Wire& o) const { return _ref != o._ref; }
 
 inline bool PortRef::operator==(const PortRef& o) const { return _ptr == o._ptr && _instInd == o._instInd && _portInd == o._portInd; }
-inline bool PortRef::operator!=(const PortRef& o) const { return _ptr != o._ptr || _instInd != o._instInd || _portInd != o._portInd; }
+inline bool PortRef::operator!=(const PortRef& o) const { return !operator==(o); }
 inline bool Port::operator==(const Port& o) const { return _ref == o._ref; }
 inline bool Port::operator!=(const Port& o) const { return _ref != o._ref; }
 
-inline bool FlatEltRef::operator==(const FlatEltRef& o) const { return _ref == o._ref && _index == o._index; }
-inline bool FlatEltRef::operator!=(const FlatEltRef& o) const { return _ref != o._ref || _index != o._index; }
-inline bool FlatNode::operator==(const FlatNode& o) const { return _ref == o._ref; }
-inline bool FlatNode::operator!=(const FlatNode& o) const { return _ref != o._ref; }
-inline bool FlatWire::operator==(const FlatWire& o) const { return _ref == o._ref; }
-inline bool FlatWire::operator!=(const FlatWire& o) const { return _ref != o._ref; }
-
-inline bool FlatPortRef::operator==(const FlatPortRef& o) const { return _ref == o._ref && _index == o._index; }
-inline bool FlatPortRef::operator!=(const FlatPortRef& o) const { return _ref != o._ref || _index != o._index; }
-inline bool FlatPort::operator==(const FlatPort& o) const { return _ref == o._ref; }
-inline bool FlatPort::operator!=(const FlatPort& o) const { return _ref != o._ref; }
+inline bool FlatRef::operator==(const FlatRef& o) const { return _index == o._index; }
+inline bool FlatRef::operator!=(const FlatRef& o) const { return _index != o._index; }
+inline bool FlatNode::operator==(const FlatNode& o) const { return _object == o._object && _ref == o._ref; }
+inline bool FlatNode::operator!=(const FlatNode& o) const { return !operator==(o); }
+inline bool FlatWire::operator==(const FlatWire& o) const { return _object == o._object && _ref == o._ref; }
+inline bool FlatWire::operator!=(const FlatWire& o) const { return !operator==(o); }
+inline bool FlatPort::operator==(const FlatPort& o) const { return _object == o._object && _ref == o._ref; }
+inline bool FlatPort::operator!=(const FlatPort& o) const { return !operator==(o); }
 
 inline bool EltRef::isValidWireRef() {
     return _ptr != nullptr

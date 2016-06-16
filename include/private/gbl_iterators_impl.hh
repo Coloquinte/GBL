@@ -150,19 +150,18 @@ struct WirePortRefTransform {
 
 class FlatTransform {
     public:
-    FlatModule       operator()(Module module)      { return FlatModule       (FlatEltRef(module.ref()  , _index, _view)); }
-    FlatNode         operator()(Node node)          { return FlatNode         (FlatEltRef(node.ref()    , _index, _view)); }
-    FlatInstance     operator()(Instance instance)  { return FlatInstance     (FlatEltRef(instance.ref(), _index, _view)); }
-    FlatWire         operator()(Wire wire)          { return FlatWire         (FlatEltRef(wire.ref()    , _index, _view)); }
-    FlatPort         operator()(Port port)          { return FlatPort         (FlatPortRef(port.ref()   , _index, _view)); }
-    FlatInstancePort operator()(InstancePort port)  { return FlatInstancePort (FlatPortRef(port.ref()   , _index, _view)); }
-    FlatModulePort   operator()(ModulePort port)    { return FlatModulePort   (FlatPortRef(port.ref()   , _index, _view)); }
+    FlatNode         operator()(Node node)          { return FlatNode         (node, _ref); }
+    FlatWire         operator()(Wire wire)          { return FlatWire         (wire, _ref); }
+    FlatPort         operator()(Port port)          { return FlatPort         (port, _ref); }
+    FlatModule       operator()(Module module)      { return FlatModule       (FlatNode(module, _ref)); }
+    FlatInstance     operator()(Instance instance)  { return FlatInstance     (FlatNode(instance, _ref)); }
+    FlatInstancePort operator()(InstancePort port)  { return FlatInstancePort (FlatPort(port, _ref)); }
+    FlatModulePort   operator()(ModulePort port)    { return FlatModulePort   (FlatPort(port, _ref)); }
 
-    FlatTransform(FlatSize index, const FlatView& view) : _index(index), _view(view) {}
+    FlatTransform(const FlatRef& ref) : _ref(ref) {}
 
     private:
-    FlatSize _index;
-    const FlatView& _view;
+    FlatRef _ref;
 };
 
 } // End namespace gbl::internal
@@ -278,6 +277,36 @@ inline Properties Port::properties() {
     const std::vector<internal::DataImpl>& refData = _ref._ptr->_nodes[_ref._instInd]._refData;
     if (refData.size() <= _ref._portInd) return Properties(nullptr, nullptr);
     else return Names(refData[_ref._portInd].beginProps(), refData[_ref._portInd].endProps());
+}
+
+inline FlatWire::Ports
+FlatWire::ports() {
+    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
+}
+
+inline FlatNode::Ports
+FlatNode::ports() {
+    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
+}
+
+inline FlatModule::Ports
+FlatModule::ports() {
+    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
+}
+
+inline FlatInstance::Ports
+FlatInstance::ports() {
+    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
+}
+
+inline FlatModule::Wires
+FlatModule::wires() {
+    return getTransformContainer(getObject().wires(), internal::FlatTransform(_ref));
+}
+
+inline FlatModule::Instances
+FlatModule::instances() {
+    return getTransformContainer(getObject().instances(), internal::FlatTransform(_ref));
 }
 
 } // End namespace gbl

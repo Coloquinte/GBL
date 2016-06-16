@@ -66,6 +66,7 @@ FlatView::FlatView(Module topModule)
     }
     for (Size modIndex=0; modIndex<_mods.size(); ++modIndex) {
         Module module(_mods[modIndex]);
+        _children[modIndex]._downInfos.emplace_back(0); // For the module, which is the node of _ind 0
         for (Instance instance : module.instances()) {
             Size instIndex = instance.ref()._ind;
             Size downModIndex = _mod2Index[instance.getDownModule().ref()._ptr];

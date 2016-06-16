@@ -40,8 +40,26 @@ int main() {
             abort();
         }
     }
-    if (!flatview.getTop().isTop()) {
+    FlatModule topMod = flatview.getTop();
+    if (!topMod.isTop() || topMod.getIndex() != 0lu) {
         abort();
+    }
+    
+    FlatSize i = 0;
+    for (FlatInstance inst : topMod.instances()) {
+        FlatModule downMod = inst.getDownModule();
+        if (inst.getParentModule() != topMod) abort();
+        if (downMod.isTop()) abort();
+        if (downMod.getUpInstance() != inst) abort();
+        if (inst.getIndex() != i+1) abort();
+        FlatSize j = 0;
+        for (FlatInstance downInst : downMod.instances()) {
+            if (downInst.getDownModule().getUpInstance() != downInst) abort();
+            if (downInst.getParentModule() != downMod) abort();
+            if (downInst.getIndex() != 2*j+i+3) abort();
+            ++j;
+        }
+        ++i;
     }
     return 0;
 }

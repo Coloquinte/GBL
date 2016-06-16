@@ -56,8 +56,8 @@ class Node {
   typedef Container<PortIterator>     Ports;
 
   public:
-  bool isModule();
-  bool isInstance();
+  bool isModule() const;
+  bool isInstance() const;
   Module getParentModule();
 
   void disconnectAll();
@@ -124,7 +124,8 @@ class Module : public Node {
 
   Module() {}
   Module(internal::ModuleImpl* ptr);
-  Module(const Module & module);
+  Module(const Module& module);
+  explicit Module(const Node& n);
   Module& operator=(const Module & module);
   ~Module();
 };
@@ -167,6 +168,8 @@ class Port {
 
   Module getParentModule();
   Node getNode();
+  Wire getWire();
+
   bool isInstancePort();
   bool isModulePort();
 
@@ -199,10 +202,6 @@ class ModulePort : public Port {
 
   InstancePort getUpPort(Instance inst);
 
-  void resetDir();
-  void addDirIn();
-  void addDirOut();
-
   ModulePort() {}
   explicit ModulePort(const Port& port);
 };
@@ -228,18 +227,18 @@ class FlatWire {
   Names names();
   Properties properties();
 
-  explicit FlatWire(const FlatEltRef&);
+  FlatWire(const Wire&, const FlatRef&);
 
   bool operator==(const FlatWire&) const;
   bool operator!=(const FlatWire&) const;
-  bool isValid();
 
-  // Internal use
-  FlatEltRef ref() const;
   Wire getObject();
+  // Global index for the wire
+  FlatSize getIndex();
 
   protected:
-  FlatEltRef _ref;
+  Wire _object;
+  FlatRef _ref;
 
   friend FlatPort;
 };
@@ -263,18 +262,18 @@ class FlatNode {
   Names names();
   Properties properties();
 
-  explicit FlatNode(const FlatEltRef&);
+  FlatNode(const Node&, const FlatRef&);
 
   bool operator==(const FlatNode&) const;
   bool operator!=(const FlatNode&) const;
-  bool isValid();
 
-  // Internal use
-  FlatEltRef ref() const;
   Node getObject();
+  // Global index for the node; a FlatInstance and its corresponding FlatModule share the same
+  FlatSize getIndex();
 
   protected:
-  FlatEltRef _ref;
+  Node _object;
+  FlatRef _ref;
 
   friend FlatModulePort;
   friend FlatInstancePort;
@@ -305,8 +304,8 @@ class FlatModule : public FlatNode {
   Nodes nodes();
   Instances instances();
 
-  explicit FlatModule(const FlatNode&);
-  explicit FlatModule(const FlatEltRef&);
+  FlatModule(const FlatNode&);
+  FlatModule(const Module&, const FlatRef&);
   Module getObject();
 };
 
@@ -322,8 +321,8 @@ class FlatInstance : public FlatNode {
   // Access
   Ports ports();
 
-  explicit FlatInstance(const FlatNode& n);
-  explicit FlatInstance(const FlatEltRef&);
+  FlatInstance(const FlatNode& n);
+  FlatInstance(const Instance&, const FlatRef&);
   Instance getObject();
 };
 
@@ -339,21 +338,23 @@ class FlatPort {
 
   FlatModule getParentModule();
   FlatNode getNode();
+  FlatWire getWire();
+
   bool isInstancePort();
   bool isModulePort();
 
-  explicit FlatPort(const FlatPortRef&);
+  FlatPort(const Port&, const FlatRef&);
 
   bool operator==(const FlatPort&) const;
   bool operator!=(const FlatPort&) const;
-  bool isValid();
 
-  // Internal use
-  FlatPortRef ref() const;
   Port getObject();
+  // Global index for the port; a FlatInstancePort and its corresponding FlatModulePort share the same
+  FlatSize getIndex();
 
   protected:
-  FlatPortRef _ref;
+  Port _object;
+  FlatRef _ref;
 };
 
 class FlatInstancePort : public FlatPort {
@@ -361,8 +362,8 @@ class FlatInstancePort : public FlatPort {
   FlatModulePort getDownPort();
   FlatInstance getInstance();
 
-  explicit FlatInstancePort(const FlatPort&);
-  explicit FlatInstancePort(const FlatPortRef&);
+  FlatInstancePort(const FlatPort&);
+  FlatInstancePort(const InstancePort&, const FlatRef&);
   InstancePort getObject();
 };
 
@@ -370,8 +371,8 @@ class FlatModulePort : public FlatPort {
   public:
   FlatInstancePort getUpPort();
 
-  explicit FlatModulePort(const FlatPort&);
-  explicit FlatModulePort(const FlatPortRef&);
+  FlatModulePort(const FlatPort&);
+  FlatModulePort(const ModulePort&, const FlatRef&);
   ModulePort getObject();
 };
 

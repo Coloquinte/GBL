@@ -118,26 +118,14 @@ struct PortRef {
   Size _portInd;
 };
 
-struct FlatEltRef {
-  bool operator==(const FlatEltRef&) const;
-  bool operator!=(const FlatEltRef&) const;
+struct FlatRef {
+  bool operator==(const FlatRef&) const;
+  bool operator!=(const FlatRef&) const;
 
   const FlatView& _view;
-  EltRef _ref;
   FlatSize _index;
 
-  FlatEltRef(EltRef ref, FlatSize index, const FlatView& view);
-};
-
-struct FlatPortRef {
-  bool operator==(const FlatPortRef&) const;
-  bool operator!=(const FlatPortRef&) const;
-
-  const FlatView& _view;
-  PortRef _ref;
-  FlatSize _index;
-
-  FlatPortRef(PortRef ref, FlatSize index, const FlatView& view);
+  FlatRef(FlatSize index, const FlatView& view);
 };
 
 typedef Container<internal::NameIterator>     Names;

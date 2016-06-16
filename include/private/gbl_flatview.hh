@@ -56,6 +56,8 @@ private:
     };
     friend FlatInstance;
     friend FlatModule;
+    friend FlatNode;
+    friend FlatWire;
 
 private:
     Size getModIndex(FlatSize flatIndex) const;
@@ -63,7 +65,6 @@ private:
     Size getPortModIndex(FlatSize flatIndex) const;
 
     Size getModIndex(Module module) const;
-    Size getRepresentantModIndex(Node node) const;
 
     FlatSize getNumFlatInstanciations(Size modIndex) const;
 
@@ -129,23 +130,17 @@ inline FlatSize FlatView::getNumFlatInstanciations(Wire wire) const {
 }
 
 inline FlatModule FlatView::getTop() const {
-    return FlatModule(FlatNode(FlatEltRef(_topMod.ref(), 0, *this)));
+    return FlatModule(FlatNode(_topMod, FlatRef(0, *this)));
 }
 
-inline Wire FlatWire::getObject() {
-    return Wire(_ref._ref._ptr, _ref._ref._ind);
-}
-inline Node FlatNode::getObject() {
-    return Node(_ref._ref._ptr, _ref._ref._ind);
-}
+inline Wire FlatWire::getObject() { return _object; }
+inline Node FlatNode::getObject() { return _object; }
+inline Port FlatPort::getObject() { return _object; }
 inline Instance FlatInstance::getObject() {
     return Instance(FlatNode::getObject());
 }
 inline Module FlatModule::getObject() {
-    return Module(FlatNode::getObject().ref()._ptr);
-}
-inline Port FlatPort::getObject() {
-    return Port(_ref._ref._ptr, _ref._ref._instInd, _ref._ref._portInd);
+    return Module(FlatNode::getObject());
 }
 inline InstancePort FlatInstancePort::getObject() {
     return InstancePort(FlatPort::getObject());
@@ -158,40 +153,54 @@ inline bool FlatModule::isTop() {
     return operator==(_ref._view.getTop());
 }
 
-inline FlatEltRef::FlatEltRef(EltRef ref, FlatSize index, const FlatView& view) 
+inline FlatRef::FlatRef(FlatSize index, const FlatView& view) 
 : _view(view)
-, _ref(ref)
 , _index(index)
 {
 }
 
-inline FlatPortRef::FlatPortRef(PortRef ref, FlatSize index, const FlatView& view) 
-: _view(view)
-, _ref(ref)
-, _index(index)
-{
-}
+inline FlatNode::FlatNode(const Node& object, const FlatRef& ref) : _object(object), _ref(ref) {}
+inline FlatWire::FlatWire(const Wire& object, const FlatRef& ref) : _object(object), _ref(ref) {}
+inline FlatPort::FlatPort(const Port& object, const FlatRef& ref) : _object(object), _ref(ref) {}
 
-inline FlatNode::FlatNode(const FlatEltRef& ref) : _ref(ref) {}
-inline FlatPort::FlatPort(const FlatPortRef& ref) : _ref(ref) {}
+inline FlatModule::FlatModule(const Module& object, const FlatRef& ref) : FlatNode(object, ref) {}
+inline FlatInstance::FlatInstance(const Instance& object, const FlatRef& ref) : FlatNode(object, ref) {}
+inline FlatInstancePort::FlatInstancePort(const InstancePort& object, const FlatRef& ref) : FlatPort(object, ref) {}
+inline FlatModulePort::FlatModulePort(const ModulePort& object, const FlatRef& ref) : FlatPort(object, ref) {}
+
 inline FlatModule::FlatModule(const FlatNode& node) : FlatNode(node) {}
 inline FlatInstance::FlatInstance(const FlatNode& node) : FlatNode(node) {}
 inline FlatModulePort::FlatModulePort(const FlatPort& port) : FlatPort(port) {}
 inline FlatInstancePort::FlatInstancePort(const FlatPort& port) : FlatPort(port) {}
+
+inline FlatModule FlatNode::getParentModule() { return FlatModule(getObject().getParentModule(), _ref); }
+inline FlatModule FlatWire::getParentModule() { return FlatModule(getObject().getParentModule(), _ref); }
+
+inline bool FlatNode::isInstance() { return getObject().isInstance(); }
+inline bool FlatNode::isModule() { return getObject().isModule(); }
+inline bool FlatPort::isInstancePort() { return getObject().isInstancePort(); }
+inline bool FlatPort::isModulePort() { return getObject().isModulePort(); }
+
+inline bool FlatPort::isConnected() { return getObject().isConnected(); }
+inline FlatWire FlatPort::getWire() { return FlatWire(getObject().getWire(), _ref); }
+inline FlatNode FlatPort::getNode() { return FlatNode(getObject().getNode(), _ref); }
 
 inline FlatInstance FlatModule::getUpInstance() {
     FlatView::ParentInfos info = _ref._view._parents[_ref._view.getModIndex(getObject())];
     Size index = bisectIndex(info._instEndIndexs, _ref._index);
     FlatView::UpInfo up = info._upInfos[index];
     assert(up._offset <= _ref._index);
-    FlatEltRef ref(up._parentInstance.ref(), _ref._index - up._offset, _ref._view);
-    return FlatInstance(FlatNode(ref));
+    return FlatInstance(up._parentInstance, FlatRef(_ref._index - up._offset, _ref._view));
 }
 
 inline FlatModule FlatInstance::getDownModule() {
-    FlatView::DownInfo down = _ref._view._children[_ref._view.getModIndex(getObject().getParentModule())]._downInfos[_ref._ref._ind];
-    FlatEltRef ref(getObject().getDownModule().ref(), _ref._index + down._offset, _ref._view);
-    return FlatModule(FlatNode(ref));
+    FlatView::DownInfo down = _ref._view._children[_ref._view.getModIndex(getObject().getParentModule())]._downInfos[_object.ref()._ind];
+    return FlatModule(getObject().getDownModule(), FlatRef(_ref._index + down._offset, _ref._view));
+}
+
+inline FlatSize FlatNode::getIndex() {
+    FlatModule repr = isInstance() ? FlatInstance(*this).getDownModule() : FlatModule(*this);
+    return repr._ref._index + _ref._view._modEndIndexs[_ref._view.getModIndex(repr.getObject())];
 }
 
 } // End namespace gbl
