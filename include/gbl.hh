@@ -380,6 +380,7 @@ class FlatModulePort : public FlatPort {
 
 #include "private/gbl_impl.hh"
 #include "private/gbl_iterators_impl.hh"
+#include "private/gbl_flatview.hh"
 
 #endif
 

@@ -3,9 +3,6 @@
 #ifndef GBL_FLATVIEW_HH
 #define GBL_FLATVIEW_HH
 
-#include "private/gbl_forward_declarations.hh"
-#include "gbl.hh"
-
 #include <vector>
 #include <unordered_map>
 #include <algorithm>

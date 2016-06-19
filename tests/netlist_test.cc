@@ -1,4 +1,5 @@
 
+#include "testing.hh"
 #include "gbl.hh"
 #include "gbl_symbols.hh"
 
@@ -9,8 +10,9 @@
 using namespace gbl;
 using namespace std;
 
-void testBasicConstruction() {
-    cout << "Started test for module construction" << endl;
+BOOST_AUTO_TEST_SUITE(NetlistTest)
+
+BOOST_AUTO_TEST_CASE(testBasicConstruction) {
     Module hierMod = Module::createHier();
     Module leafMod = Module::createLeaf();
 
@@ -19,32 +21,30 @@ void testBasicConstruction() {
 
     ModulePort mpt1 = leafMod.createPort();
     ModulePort mpt2 = leafMod.createPort();
+
     InstancePort ipt1 = mpt1.getUpPort(inst);
     InstancePort ipt2 = mpt2.getUpPort(inst);
-    if (ipt1.isConnected() || ipt2.isConnected()) {
-        cerr << "Connected port at construction time" << endl;
-        abort();
-    }
+    BOOST_CHECK (!ipt1.isConnected());
+    BOOST_CHECK (!ipt2.isConnected());
+
     ipt1.connect(w);
+    BOOST_CHECK (ipt1.isConnected());
+    BOOST_CHECK (!ipt2.isConnected());
+
     ipt2.connect(w);
-    if (!ipt1.isConnected() || !ipt2.isConnected()) {
-        cerr << "Failed port connection" << endl;
-        abort();
-    }
+    BOOST_CHECK (ipt1.isConnected());
+    BOOST_CHECK (ipt2.isConnected());
+
     ipt1.disconnect();
-    if (ipt1.isConnected()) {
-        cerr << "Failed port disconnection" << endl;
-        abort();
-    }
+    BOOST_CHECK (!ipt1.isConnected());
+    BOOST_CHECK (ipt2.isConnected());
+
     mpt1.destroy();
     inst.destroy();
     w.destroy();
-    cout << "Finished test for module construction" << endl;
 }
 
-void testIteration() {
-    cout << "Started test for iterators and data" << endl;
-
+BOOST_AUTO_TEST_CASE(testIteration) {
     const int numPorts = 100;
     const int numWires = 400;
     const int numInsts = 300;
@@ -62,7 +62,7 @@ void testIteration() {
     for (int i=0; i<numPorts; ++i) {
         leafPorts.push_back(leafMod.createPort());
     }
-    if (leafPorts.size() != leafMod.ports().size()) abort();
+    BOOST_CHECK_EQUAL (leafPorts.size(), leafMod.ports().size());
     vector<Instance> instances;
     for (int i=0; i<numInsts; ++i) {
         instances.push_back(fstMod.createInstance(leafMod));
@@ -74,18 +74,14 @@ void testIteration() {
 
     // Test that the instances and wires match
     for (Instance inst : fstMod.instances()) {
-        if (find(instances.begin(), instances.end(), inst) == instances.end()) {
-            abort();
-        }
-        if (leafPorts.size() != inst.ports().size()) abort();
+        BOOST_CHECK (find(instances.begin(), instances.end(), inst) != instances.end());
+        BOOST_CHECK_EQUAL (leafPorts.size(), inst.ports().size());
     }
-    if (fstMod.instances().size() != instances.size()) { abort(); }
+    BOOST_CHECK_EQUAL  (fstMod.instances().size(), instances.size());
     for (Wire wire : fstMod.wires()) {
-        if (find(wires.begin(), wires.end(), wire) == wires.end()) {
-            abort();
-        }
+        BOOST_CHECK (find(wires.begin(), wires.end(), wire) != wires.end());
     }
-    if (fstMod.wires().size() != wires.size()) { abort(); }
+    BOOST_CHECK_EQUAL (fstMod.wires().size(), wires.size());
 
     // Connect stuff randomly
     for (Instance inst : fstMod.instances()) {
@@ -97,68 +93,62 @@ void testIteration() {
     }
 
     for (Instance inst : fstMod.instances()) {
-        if ( inst.eraseProperty(Symbol::VCC)) abort();
-        if ( inst.hasProperty(Symbol::VCC)) abort();
-        if (!inst.addProperty(Symbol::VCC)) abort();
-        if ( inst.addProperty(Symbol::VCC)) abort();
-        if (!inst.hasProperty(Symbol::VCC)) abort();
-        if (!inst.eraseProperty(Symbol::VCC)) abort();
-        if ( inst.hasProperty(Symbol::VCC)) abort();
+        BOOST_CHECK (!inst.eraseProperty(Symbol::VCC));
+        BOOST_CHECK (!inst.hasProperty(Symbol::VCC));
+        BOOST_CHECK ( inst.addProperty(Symbol::VCC));
+        BOOST_CHECK (!inst.addProperty(Symbol::VCC));
+        BOOST_CHECK ( inst.hasProperty(Symbol::VCC));
+        BOOST_CHECK ( inst.eraseProperty(Symbol::VCC));
+        BOOST_CHECK (!inst.hasProperty(Symbol::VCC));
 
-        if (inst.names().size() != 0) abort();
-        if (inst.properties().size() != 0) abort();
+        BOOST_CHECK_EQUAL (inst.names().size(), 0);
+        BOOST_CHECK_EQUAL (inst.properties().size(), 0);
         for (ID i=0; i<numTestIDs; ++i) {
             inst.addName(i);
             inst.addProperty(i);
         }
-        if (inst.names().size() != numTestIDs) abort();
-        if (inst.properties().size() != numTestIDs) abort();
+        BOOST_CHECK_EQUAL (inst.names().size(), numTestIDs);
+        BOOST_CHECK_EQUAL (inst.properties().size(), numTestIDs);
     }
 
     for (Port port : leafMod.ports()) {
-        if ( port.eraseProperty(Symbol::VCC)) abort();
-        if ( port.hasProperty(Symbol::VCC)) abort();
-        if (!port.addProperty(Symbol::VCC)) abort();
-        if ( port.addProperty(Symbol::VCC)) abort();
-        if (!port.hasProperty(Symbol::VCC)) abort();
-        if (!port.eraseProperty(Symbol::VCC)) abort();
-        if ( port.hasProperty(Symbol::VCC)) abort();
+        BOOST_CHECK (!port.eraseProperty(Symbol::VCC));
+        BOOST_CHECK (!port.hasProperty(Symbol::VCC));
+        BOOST_CHECK ( port.addProperty(Symbol::VCC));
+        BOOST_CHECK (!port.addProperty(Symbol::VCC));
+        BOOST_CHECK ( port.hasProperty(Symbol::VCC));
+        BOOST_CHECK ( port.eraseProperty(Symbol::VCC));
+        BOOST_CHECK (!port.hasProperty(Symbol::VCC));
 
-        if (port.names().size() != 0) abort();
-        if (port.properties().size() != 0) abort();
+        BOOST_CHECK_EQUAL (port.names().size(), 0);
+        BOOST_CHECK_EQUAL (port.properties().size(), 0);
         for (ID i=0; i<numTestIDs; ++i) {
             port.addName(i);
             port.addProperty(i);
         }
-        if (port.names().size() != numTestIDs) abort();
-        if (port.properties().size() != numTestIDs) abort();
+        BOOST_CHECK_EQUAL (port.names().size(), numTestIDs);
+        BOOST_CHECK_EQUAL (port.properties().size(), numTestIDs);
     }
 
     for (Port port : instances[0].ports()) {
-        if ( port.eraseProperty(Symbol::VCC)) abort();
-        if ( port.hasProperty(Symbol::VCC)) abort();
-        if (!port.addProperty(Symbol::VCC)) abort();
-        if ( port.addProperty(Symbol::VCC)) abort();
-        if (!port.hasProperty(Symbol::VCC)) abort();
-        if (!port.eraseProperty(Symbol::VCC)) abort();
-        if ( port.hasProperty(Symbol::VCC)) abort();
+        BOOST_CHECK (!port.eraseProperty(Symbol::VCC));
+        BOOST_CHECK (!port.hasProperty(Symbol::VCC));
+        BOOST_CHECK ( port.addProperty(Symbol::VCC));
+        BOOST_CHECK (!port.addProperty(Symbol::VCC));
+        BOOST_CHECK ( port.hasProperty(Symbol::VCC));
+        BOOST_CHECK ( port.eraseProperty(Symbol::VCC));
+        BOOST_CHECK (!port.hasProperty(Symbol::VCC));
 
-        if (port.names().size() != 0) abort();
-        if (port.properties().size() != 0) abort();
+        BOOST_CHECK_EQUAL (port.names().size(), 0);
+        BOOST_CHECK_EQUAL (port.properties().size(), 0);
         for (ID i=0; i<numTestIDs; ++i) {
             port.addName(i);
             port.addProperty(i);
         }
-        if (port.names().size() != numTestIDs) abort();
-        if (port.properties().size() != numTestIDs) abort();
+        BOOST_CHECK_EQUAL (port.names().size(), numTestIDs);
+        BOOST_CHECK_EQUAL (port.properties().size(), numTestIDs);
     }
-
-    cout << "Finished test for iterators and data" << endl;
 }
 
-int main() {
-    testBasicConstruction();
-    testIteration();
-    return 0;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
