@@ -196,6 +196,7 @@ Container<FilterIterator<InputIterator, Predicate> > getFilterContainer(Containe
 
 inline Module::Wires
 Module::wires() {
+    assert(isValid());
     return getTransformContainer(
         getFilterContainer(
             internal::EltRefInputIterator(EltRef(_ref._ptr, 0)),
@@ -207,6 +208,7 @@ Module::wires() {
 
 inline Module::Nodes
 Module::nodes() {
+    assert(isValid());
     return getTransformContainer(
         getFilterContainer(
             internal::EltRefInputIterator(EltRef(_ref._ptr, 0)),
@@ -226,6 +228,7 @@ Module::instances() {
 
 inline Node::Ports
 Node::ports() {
+    assert(isValid());
     return getTransformContainer(getFilterContainer(
         internal::PortRefInputIterator(PortRef(_ref._ptr, _ref._ind, 0)),
         internal::PortRefInputIterator(PortRef(_ref._ptr, _ref._ind, _ref._ptr->_nodes[_ref._ind]._instanciation->_nodes[0]._refs.size())),
@@ -235,6 +238,7 @@ Node::ports() {
 
 inline Wire::Ports
 Wire::ports() {
+    assert(isValid());
     return getTransformContainer(getFilterContainer(
         internal::PortRefInputIterator(PortRef(_ref._ptr, _ref._ind, 0)),
         internal::PortRefInputIterator(PortRef(_ref._ptr, _ref._ind, _ref._ptr->_wires[_ref._ind]._refs.size())),
@@ -244,36 +248,44 @@ Wire::ports() {
 
 inline Instance::Ports
 Instance::ports() {
+    assert(isValid());
     return getTransformContainer(Node::ports(), internal::InsPortTransform());
 }
 
 inline Module::Ports
 Module::ports() {
+    assert(isValid());
     return getTransformContainer(Node::ports(), internal::ModPortTransform());
 }
 
 inline Names Node::names() {
+    assert(isValid());
     const internal::DataImpl& data = _ref._ptr->_nodes[_ref._ind]._data;
     return Names(data.beginNames(), data.endNames());
 }
 inline Properties Node::properties() {
+    assert(isValid());
     const internal::DataImpl& data = _ref._ptr->_nodes[_ref._ind]._data;
     return Properties(data.beginProps(), data.endProps());
 }
 inline Names Wire::names() {
+    assert(isValid());
     const internal::DataImpl& data = _ref._ptr->_wires[_ref._ind]._data;
     return Names(data.beginNames(), data.endNames());
 }
 inline Properties Wire::properties() {
+    assert(isValid());
     const internal::DataImpl& data = _ref._ptr->_wires[_ref._ind]._data;
     return Properties(data.beginProps(), data.endProps());
 }
 inline Names Port::names() {
+    assert(isValid());
     const std::vector<internal::DataImpl>& refData = _ref._ptr->_nodes[_ref._instInd]._refData;
     if (refData.size() <= _ref._portInd) return Names(nullptr, nullptr);
     else return Names(refData[_ref._portInd].beginNames(), refData[_ref._portInd].endNames());
 }
 inline Properties Port::properties() {
+    assert(isValid());
     const std::vector<internal::DataImpl>& refData = _ref._ptr->_nodes[_ref._instInd]._refData;
     if (refData.size() <= _ref._portInd) return Properties(nullptr, nullptr);
     else return Names(refData[_ref._portInd].beginProps(), refData[_ref._portInd].endProps());

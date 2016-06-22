@@ -95,23 +95,25 @@ class Pool {
     return ind < _data.size() && _data[ind]._nextFree == UsedInd;
   }
   Size allocate() {
+    Size newAlloc;
     if (_freeList != EmptyInd) {
-      Size newAlloc = _freeList;
+      newAlloc = _freeList;
       _freeList = _data[newAlloc]._nextFree;
-      return newAlloc;
     }
     else {
-      Size newAlloc = _data.size();
+      newAlloc = _data.size();
       _data.emplace_back();
-      _data.back()._nextFree = UsedInd;
-      return newAlloc;
     }
+    _data[newAlloc]._nextFree = UsedInd;
+    assert(isValid(newAlloc));
+    return newAlloc;
   }
   void deallocate(Size ind) {
-    assert(_data[ind]._nextFree == UsedInd);
+    assert(isValid(ind));
     _data[ind]._val = T();
     _data[ind]._nextFree = _freeList;
     _freeList = ind;
+    assert(!isValid(ind));
   }
   T& operator[](Size ind) {
     assert(isValid(ind));
@@ -187,7 +189,9 @@ Module::Module(const Node& node)
 : Node(node)
 {
     assert(node.isModule());
-    ++_ref._ptr->_refcnt;
+    if (_ref._ptr != nullptr) {
+        ++_ref._ptr->_refcnt;
+    }
 }
 
 inline
@@ -204,20 +208,19 @@ Module::Module(const Module& module)
 
 inline Module &
 Module::operator=(const Module& module) {
-    ++module._ref._ptr->_refcnt;
-    if (_ref._ptr != nullptr) {
-        if(--_ref._ptr->_refcnt == 0) {
-            delete _ref._ptr;
-        }
-    }
     _ref._ptr = module._ref._ptr;
+    if (_ref._ptr != nullptr) {
+        ++_ref._ptr->_refcnt;
+    }
     return *this;
 }
 
 inline
 Module::~Module() {
-    if(--_ref._ptr->_refcnt == 0) {
-        delete _ref._ptr;
+    if (_ref._ptr != nullptr) {
+        if(--_ref._ptr->_refcnt == 0) {
+            delete _ref._ptr;
+        }
     }
 }
 
@@ -236,11 +239,13 @@ inline bool Module::isHier() { return !_ref._ptr->_leaf; }
 
 inline Wire
 Module::createWire() {
+    assert(isValid());
     return Wire(_ref._ptr, _ref._ptr->_wires.allocate());
 }
 
 inline Instance
 Module::createInstance(Module instanciated) {
+    assert(isValid());
     Size ind = _ref._ptr->_nodes.allocate();
     _ref._ptr->_nodes[ind]._instanciation = instanciated._ref._ptr;
     return Instance(Node(_ref._ptr, ind));
@@ -248,6 +253,7 @@ Module::createInstance(Module instanciated) {
 
 inline ModulePort
 Module::createPort() {
+    assert(isValid());
     Size newPortInd;
     if (_ref._ptr->_firstFreePort == internal::EmptyInd) {
         newPortInd = _ref._ptr->_nodes[0]._refs.size();
@@ -261,7 +267,7 @@ Module::createPort() {
     return ModulePort(Port(_ref._ptr, 0, newPortInd));
 }
 
-inline EltRef::EltRef() : _ptr(nullptr), _ind(-1) {}
+inline EltRef::EltRef() : _ptr(nullptr), _ind(0) {}
 inline EltRef::EltRef(internal::ModuleImpl *ptr, Size ind) : _ptr(ptr), _ind(ind) {}
 inline Wire::Wire(internal::ModuleImpl *ptr, Size ind) : _ref(ptr, ind) {}
 inline Node::Node(internal::ModuleImpl *ptr, Size ind) : _ref(ptr, ind) {}
@@ -333,7 +339,9 @@ Port::getWire() {
 
 inline void
 Port::connect(Wire wire) {
+    //std::cout << "Connecting port " << _ref._instInd << ", " << _ref._portInd << " to wire " << wire._ref._ind << std::endl;
     assert(isValid());
+    assert(wire.isValid());
     assert(!isConnected());
     assert(wire._ref._ptr == _ref._ptr);
     Size wirePortInd = _ref._ptr->_wires[wire._ref._ind]._refs.push();
@@ -356,6 +364,7 @@ Port::connect(Wire wire) {
 
 inline void
 Port::disconnect() {
+    //std::cout << "Disconnecting port " << _ref._instInd << ", " << _ref._portInd << std::endl;
     assert(isValid());
     assert(isConnected());
     internal::Xref& instRef = _ref._ptr->_nodes[_ref._instInd]._refs[_ref._portInd];
@@ -393,6 +402,7 @@ Instance::destroy() {
     assert(isValid());
     disconnectAll();
     _ref._ptr->_nodes.deallocate(_ref._ind);
+    assert(!isValid());
 }
 
 inline void
@@ -400,17 +410,20 @@ Wire::destroy() {
     assert(isValid());
     disconnectAll();
     _ref._ptr->_wires.deallocate(_ref._ind);
+    assert(!isValid());
 }
 
 inline void
 ModulePort::destroy() {
     // TODO: have some refcounting mecanism
+    assert(isValid());
     if (isConnected()) {
         disconnect();
     }
     _ref._ptr->_nodes[0]._refs[_ref._portInd] = internal::Xref::Invalid();
     _ref._ptr->_nodes[0]._refs[_ref._portInd]._ind = _ref._ptr->_firstFreePort;
     _ref._ptr->_firstFreePort = _ref._portInd;
+    assert(!isValid());
 }
 
 inline bool EltRef::operator==(const EltRef& o) const { return _ptr == o._ptr && _ind == o._ind; }
