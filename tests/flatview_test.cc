@@ -51,6 +51,8 @@ BOOST_AUTO_TEST_CASE(testFlatView) {
         BOOST_CHECK (!downMod.isTop());
         BOOST_CHECK (downMod.getUpInstance() == inst);
         BOOST_CHECK_EQUAL (inst.getIndex(), i+1);
+        BOOST_CHECK (flatview.getFlatModuleByIndex(inst.getIndex()) == inst.getDownModule());
+        BOOST_CHECK (flatview.getFlatInstanceByIndex(inst.getIndex()) == inst);
         FlatSize j = 0;
         for (FlatInstance downInst : downMod.instances()) {
             BOOST_CHECK (downInst.getDownModule().getUpInstance() == downInst);

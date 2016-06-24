@@ -18,15 +18,16 @@ public:
 
     void selfcheck() const;
 
-    FlatSize beginIndex(Node node) const;
-    FlatSize endIndex(Node node) const;
-    FlatSize beginIndex(Wire wire) const;
-    FlatSize endIndex(Wire wire) const;
-
     FlatSize getNumFlatInstanciations(Node node) const;
     FlatSize getNumFlatInstanciations(Wire wire) const;
 
     FlatModule getTop() const;
+
+    FlatModule       getFlatModuleByIndex       (FlatSize index) const;
+    FlatInstance     getFlatInstanceByIndex     (FlatSize index) const;
+    FlatWire         getFlatWireByIndex         (FlatSize index) const;
+    FlatModulePort   getFlatModulePortByIndex   (FlatSize index) const;
+    FlatInstancePort getFlatInstancePortByIndex (FlatSize index) const;
 
 private:
     struct DownInfo {
@@ -198,6 +199,21 @@ inline FlatModule FlatInstance::getDownModule() {
 inline FlatSize FlatNode::getIndex() {
     FlatModule repr = isInstance() ? FlatInstance(*this).getDownModule() : FlatModule(*this);
     return repr._ref._index + _ref._view._modEndIndexs[_ref._view.getModIndex(repr.getObject())];
+}
+
+inline FlatModule FlatView::getFlatModuleByIndex(FlatSize index) const {
+    Size modInd = getModIndex(index);
+    return FlatModule(Module(_mods[modInd]), FlatRef(index - _modEndIndexs[modInd], *this));
+}
+inline FlatInstance FlatView::getFlatInstanceByIndex(FlatSize index) const {
+    return getFlatModuleByIndex(index).getUpInstance();
+}
+inline FlatWire FlatView::getFlatWireByIndex(FlatSize index) const {
+    Size modInd = getWireModIndex(index);
+    FlatSize num = getNumFlatInstanciations(modInd);
+    FlatSize flatInd = (index - _wireEndIndexs[modInd]) % num;
+    Size ind = (index - _wireEndIndexs[modInd]) / num;
+    return FlatWire(Wire(_mods[modInd], _wires[modInd][ind]), FlatRef(flatInd, *this));
 }
 
 } // End namespace gbl
