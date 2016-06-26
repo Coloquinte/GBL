@@ -18,6 +18,10 @@ public:
 
     void selfcheck() const;
 
+    FlatSize getNumFlatModules() const;
+    FlatSize getNumFlatWires() const;
+    FlatSize getNumFlatPorts() const;
+
     FlatSize getNumFlatInstanciations(Node node) const;
     FlatSize getNumFlatInstanciations(Wire wire) const;
 
@@ -56,6 +60,7 @@ private:
     friend FlatModule;
     friend FlatNode;
     friend FlatWire;
+    friend FlatPort;
 
 private:
     Size getModIndex(FlatSize flatIndex) const;
@@ -173,6 +178,7 @@ inline FlatInstancePort::FlatInstancePort(const FlatPort& port) : FlatPort(port)
 
 inline FlatModule FlatNode::getParentModule() { return FlatModule(getObject().getParentModule(), _ref); }
 inline FlatModule FlatWire::getParentModule() { return FlatModule(getObject().getParentModule(), _ref); }
+inline FlatModule FlatPort::getParentModule() { return FlatModule(getObject().getParentModule(), _ref); }
 
 inline bool FlatNode::isInstance() { return getObject().isInstance(); }
 inline bool FlatNode::isModule() { return getObject().isModule(); }
@@ -182,6 +188,7 @@ inline bool FlatPort::isModulePort() { return getObject().isModulePort(); }
 inline bool FlatPort::isConnected() { return getObject().isConnected(); }
 inline FlatWire FlatPort::getWire() { return FlatWire(getObject().getWire(), _ref); }
 inline FlatNode FlatPort::getNode() { return FlatNode(getObject().getNode(), _ref); }
+inline FlatInstance FlatInstancePort::getInstance() { return FlatInstance(getNode()); }
 
 inline FlatInstance FlatModule::getUpInstance() {
     FlatView::ParentInfos info = _ref._view._parents[_ref._view.getModIndex(getObject())];
@@ -196,9 +203,44 @@ inline FlatModule FlatInstance::getDownModule() {
     return FlatModule(getObject().getDownModule(), FlatRef(_ref._index + down._offset, _ref._view));
 }
 
+inline bool FlatModulePort::isTopPort() {
+    return FlatPort::getParentModule().isTop();
+}
+
+inline FlatInstancePort FlatModulePort::getUpPort() {
+    assert(!isTopPort());
+    FlatInstance upInst = getParentModule().getUpInstance();
+    return FlatInstancePort(
+        getObject().getUpPort(upInst.getObject()),
+        upInst._ref
+    );
+}
+
+inline FlatModulePort FlatInstancePort::getDownPort() {
+    FlatModule downMod = getInstance().getDownModule();
+    return FlatModulePort(
+        getObject().getDownPort(),
+        downMod._ref
+    );
+}
+
 inline FlatSize FlatNode::getIndex() {
     FlatModule repr = isInstance() ? FlatInstance(*this).getDownModule() : FlatModule(*this);
     return repr._ref._index + _ref._view._modEndIndexs[_ref._view.getModIndex(repr.getObject())];
+}
+inline FlatSize FlatWire::getIndex() {
+    Size modInd = _ref._view.getModIndex(getObject().getParentModule());
+    FlatSize numInst = _ref._view.getNumFlatInstanciations(modInd);
+    assert(_ref._index < numInst);
+    return _ref._view._wireEndIndexs[modInd] + numInst * _ref._view._wireHierToInternal[modInd][getObject().ref()._ind] + _ref._index;
+}
+inline FlatSize FlatPort::getIndex() {
+    const FlatView& v = _ref._view;
+    FlatModulePort repr = isInstancePort() ? FlatInstancePort(*this).getDownPort() : FlatModulePort(*this);
+    Size modInd = v.getModIndex(repr.getObject().getParentModule());
+    FlatSize numInst = v.getNumFlatInstanciations(modInd);
+    assert(repr._ref._index < numInst);
+    return v._portEndIndexs[modInd] + numInst * v._portHierToInternal[modInd][repr.getObject().ref()._portInd] + repr._ref._index;
 }
 
 inline FlatModule FlatView::getFlatModuleByIndex(FlatSize index) const {
@@ -208,12 +250,37 @@ inline FlatModule FlatView::getFlatModuleByIndex(FlatSize index) const {
 inline FlatInstance FlatView::getFlatInstanceByIndex(FlatSize index) const {
     return getFlatModuleByIndex(index).getUpInstance();
 }
+
 inline FlatWire FlatView::getFlatWireByIndex(FlatSize index) const {
     Size modInd = getWireModIndex(index);
     FlatSize num = getNumFlatInstanciations(modInd);
-    FlatSize flatInd = (index - _wireEndIndexs[modInd]) % num;
-    Size ind = (index - _wireEndIndexs[modInd]) / num;
-    return FlatWire(Wire(_mods[modInd], _wires[modInd][ind]), FlatRef(flatInd, *this));
+    FlatSize localIndex = index - _wireEndIndexs[modInd];
+    return FlatWire(
+        Wire(_mods[modInd], _wires[modInd][localIndex / num])
+      , FlatRef(localIndex % num, *this)
+    );
+}
+inline FlatModulePort FlatView::getFlatModulePortByIndex(FlatSize index) const {
+    Size modInd = getPortModIndex(index);
+    FlatSize num = getNumFlatInstanciations(modInd);
+    FlatSize localIndex = index - _portEndIndexs[modInd];
+    return FlatModulePort(
+        ModulePort(Port(_mods[modInd], 0u, _ports[modInd][localIndex / num]))
+      , FlatRef(localIndex % num, *this)
+    );
+}
+inline FlatInstancePort FlatView::getFlatInstancePortByIndex(FlatSize index) const {
+    return getFlatModulePortByIndex(index).getUpPort();
+}
+
+inline FlatSize FlatView::getNumFlatModules() const {
+    return _modEndIndexs.back() - _modEndIndexs.front();
+}
+inline FlatSize FlatView::getNumFlatWires() const {
+    return _wireEndIndexs.back() - _wireEndIndexs.front();
+}
+inline FlatSize FlatView::getNumFlatPorts() const {
+    return _portEndIndexs.back() - _portEndIndexs.front();
 }
 
 } // End namespace gbl

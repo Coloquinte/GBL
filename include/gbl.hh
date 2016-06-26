@@ -370,6 +370,7 @@ class FlatInstancePort : public FlatPort {
 class FlatModulePort : public FlatPort {
   public:
   FlatInstancePort getUpPort();
+  bool isTopPort();
 
   FlatModulePort(const FlatPort&);
   FlatModulePort(const ModulePort&, const FlatRef&);

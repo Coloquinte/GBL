@@ -12,146 +12,140 @@ using namespace std;
 
 class ModuleGenerator {
     public:
-    ModuleGenerator(int seed = 0)
+    ModuleGenerator(int depth = 0, int seed = 0)
     : rengine(seed)
     {
-        mod     = Module::createHier();
-        leafMod = Module::createLeaf();
-        assert(mod.isValid());
-        assert(leafMod.isValid());
-    }
-
-    Module getModule() {
-        return mod;
-    }
-
-    void initLeafPorts(int creationNumber, float destructionProbability) {
-        Size initSize = leafMod.ports().size();
-        for (int j=0; j<creationNumber; ++j) {
-            leafMod.createPort();
+        for (int i=0; i<depth+1; ++i) {
+            _mods.push_back(Module::createHier());
+            assert(_mods.back().isValid());
         }
-        Size grownSize = leafMod.ports().size();
-        assert(grownSize == initSize + creationNumber);
-        unsigned removalNumber = 0;
-        for (ModulePort port : leafMod.ports()) {
-            std::uniform_real_distribution<float> dist(0.0, 1.0);
-            if (dist(rengine) < destructionProbability) {
-                port.destroy();
-                ++removalNumber;
+        _mods.push_back(Module::createLeaf());
+        assert(_mods.back().isValid());
+    }
+
+    Module getModule(int i=0) {
+        return _mods[i];
+    }
+
+    void initPorts(int creationNumber, float destructionProbability) {
+        for (Module mod : _mods) {
+            Size initSize = mod.ports().size();
+            for (int j=0; j<creationNumber; ++j) {
+                mod.createPort();
             }
-        }
-        assert(leafMod.ports().size() == grownSize - removalNumber);
-    }
-
-    void initHierPorts(int creationNumber, float destructionProbability) {
-        Size initSize = mod.ports().size();
-        for (int j=0; j<creationNumber; ++j) {
-            mod.createPort();
-        }
-        Size grownSize = mod.ports().size();
-        assert(grownSize == initSize + creationNumber);
-        unsigned removalNumber = 0;
-        for (ModulePort port : mod.ports()) {
-            std::uniform_real_distribution<float> dist(0.0, 1.0);
-            if (dist(rengine) < destructionProbability) {
-                port.destroy();
-                ++removalNumber;
+            Size grownSize = mod.ports().size();
+            assert(grownSize == initSize + creationNumber);
+            unsigned removalNumber = 0;
+            for (ModulePort port : mod.ports()) {
+                std::uniform_real_distribution<float> dist(0.0, 1.0);
+                if (dist(rengine) < destructionProbability) {
+                    port.destroy();
+                    ++removalNumber;
+                }
             }
+            assert(mod.ports().size() == grownSize - removalNumber);
         }
-        assert(mod.ports().size() == grownSize - removalNumber);
     }
 
     void createInstances(int creationNumber, float destructionProbability) {
-        Size initSize = mod.instances().size();
-        for (int j=0; j<creationNumber; ++j) {
-            Instance inst = mod.createInstance(leafMod);
-            assert(inst.getParentModule() == mod);
-            assert(inst.getDownModule() == leafMod);
-        }
-        Size grownSize = mod.instances().size();
-        assert(grownSize == initSize + creationNumber);
-        unsigned removalNumber = 0;
-        for (Instance inst : mod.instances()) {
-            std::uniform_real_distribution<float> dist(0.0, 1.0);
-            if (dist(rengine) < destructionProbability) {
-                inst.destroy();
-                assert(!inst.isValid());
-                ++removalNumber;
+        for (unsigned i=0; i+1<_mods.size(); ++i) {
+            Module mod = _mods[i];
+            Module downMod = _mods[i+1];
+            Size initSize = mod.instances().size();
+            for (int j=0; j<creationNumber; ++j) {
+                Instance inst = mod.createInstance(downMod);
+                assert(inst.getParentModule() == mod);
+                assert(inst.getDownModule() == downMod);
             }
+            Size grownSize = mod.instances().size();
+            assert(grownSize == initSize + creationNumber);
+            unsigned removalNumber = 0;
+            for (Instance inst : mod.instances()) {
+                std::uniform_real_distribution<float> dist(0.0, 1.0);
+                if (dist(rengine) < destructionProbability) {
+                    inst.destroy();
+                    assert(!inst.isValid());
+                    ++removalNumber;
+                }
+            }
+            assert(mod.instances().size() == grownSize - removalNumber);
         }
-        assert(mod.instances().size() == grownSize - removalNumber);
     }
 
     void createWires(int creationNumber, float destructionProbability) {
-        Size initSize = mod.wires().size();
-        for (int j=0; j<creationNumber; ++j) {
-            Wire wire = mod.createWire();
-            assert(wire.getParentModule() == mod);
-        }
-        Size grownSize = mod.wires().size();
-        assert(grownSize == initSize + creationNumber);
-        unsigned removalNumber = 0;
-        for (Wire wire : mod.wires()) {
-            std::uniform_real_distribution<float> dist(0.0, 1.0);
-            if (dist(rengine) < destructionProbability) {
-                wire.destroy();
-                assert(!wire.isValid());
-                ++removalNumber;
+        for (Module mod : _mods) {
+            Size initSize = mod.wires().size();
+            for (int j=0; j<creationNumber; ++j) {
+                Wire wire = mod.createWire();
+                assert(wire.getParentModule() == mod);
             }
+            Size grownSize = mod.wires().size();
+            assert(grownSize == initSize + creationNumber);
+            unsigned removalNumber = 0;
+            for (Wire wire : mod.wires()) {
+                std::uniform_real_distribution<float> dist(0.0, 1.0);
+                if (dist(rengine) < destructionProbability) {
+                    wire.destroy();
+                    assert(!wire.isValid());
+                    ++removalNumber;
+                }
+            }
+            assert(mod.wires().size() == grownSize - removalNumber);
         }
-        assert(mod.wires().size() == grownSize - removalNumber);
     }
 
     void connectPorts(float connectionProbability, float disconnectionProbability) {
-        const std::vector<Wire> wires(mod.wires().begin(), mod.wires().end());
-        
-        for (Node node : mod.nodes()) {
-            std::uniform_real_distribution<float> dist(0.0, 1.0);
-            for (Port port : node.ports()) {
-                assert(node.isValid());
-                assert(port.isValid());
-                assert(port.getNode() == node);
-                if (port.isConnected() && dist(rengine) < disconnectionProbability) {
-                    assert(port.getWire().isValid());
-                    port.disconnect();
-                }
-                if (!wires.empty() && !port.isConnected() && dist(rengine) < connectionProbability) {
-                    std::uniform_int_distribution<int> wireDist(0, wires.size() - 1);
-                    Wire wire = wires[wireDist(rengine)];
-                    port.connect(wire);
+        for (Module mod : _mods) {
+            const std::vector<Wire> wires(mod.wires().begin(), mod.wires().end());
+            
+            for (Node node : mod.nodes()) {
+                std::uniform_real_distribution<float> dist(0.0, 1.0);
+                for (Port port : node.ports()) {
+                    assert(node.isValid());
+                    assert(port.isValid());
+                    assert(port.getNode() == node);
+                    if (port.isConnected() && dist(rengine) < disconnectionProbability) {
+                        assert(port.getWire().isValid());
+                        port.disconnect();
+                    }
+                    if (!wires.empty() && !port.isConnected() && dist(rengine) < connectionProbability) {
+                        std::uniform_int_distribution<int> wireDist(0, wires.size() - 1);
+                        Wire wire = wires[wireDist(rengine)];
+                        port.connect(wire);
+                    }
                 }
             }
         }
     }
 
     void check() {
-        for (Wire wire : mod.wires()) {
-            assert(wire.getParentModule() == mod);
-            assert(wire.isValid());
-        }
-        for (Instance inst : mod.instances()) {
-            assert(inst.getParentModule() == mod);
-            assert(inst.isValid());
-        }
-        for (Node node : mod.nodes()) {
-            for (Port port : node.ports()) {
-                assert(port.getParentModule() == mod);
-                assert(port.isValid());
+        for (Module mod : _mods) {
+            for (Wire wire : mod.wires()) {
+                assert(wire.getParentModule() == mod);
+                assert(wire.isValid());
+            }
+            for (Instance inst : mod.instances()) {
+                assert(inst.getParentModule() == mod);
+                assert(inst.isValid());
+            }
+            for (Node node : mod.nodes()) {
+                for (Port port : node.ports()) {
+                    assert(port.getParentModule() == mod);
+                    assert(port.isValid());
+                }
             }
         }
     }
 
     void run() {
         for (int i=0; i<3; ++i){
-            initLeafPorts(20, 0.4);
-            check();
-            initHierPorts(20, 0.4);
+            initPorts(20, 0.4);
             check();
         }
         for (int i=0; i<10; ++i) {
             createInstances(100, 0.2);
             check();
-            createWires(100, 0.2);
+            createWires(5, 0.2);
             check();
             connectPorts(0.95, 0.2);
             check();
@@ -159,11 +153,9 @@ class ModuleGenerator {
     }
 
     private:
-    Module mod;
-    Module leafMod;
+    std::vector<Module> _mods;
 
     std::mt19937 rengine;
-    //std::default_random_engine rengine;
 };
 
 BOOST_AUTO_TEST_SUITE(NetlistTest)
@@ -308,8 +300,37 @@ BOOST_AUTO_TEST_CASE(testIteration) {
 
 BOOST_AUTO_TEST_CASE(testRandomConstruction) {
     cout << "Starting" << endl;
-    ModuleGenerator gen;
+    ModuleGenerator gen(1);
     gen.run();
+    Module mod = gen.getModule();
+    FlatView view(mod);
+    BOOST_CHECK (view.getTop().getObject() == mod);
+
+    cout << "Testing modules" << endl;
+    for (FlatSize i=0; i<view.getNumFlatModules(); ++i) {
+        FlatModule mod = view.getFlatModuleByIndex(i);
+        BOOST_CHECK (mod.isTop() == (i==0lu));
+        BOOST_CHECK (mod.getObject().isValid());
+        BOOST_CHECK_EQUAL (mod.getIndex(), i);
+        if (!mod.isTop()) {
+            BOOST_CHECK_EQUAL (mod.getUpInstance().getIndex(), i);
+        }
+    }
+    cout << "Testing wires" << endl;
+    for (FlatSize i=0; i<view.getNumFlatWires(); ++i) {
+        FlatWire wire = view.getFlatWireByIndex(i);
+        BOOST_CHECK (wire.getObject().isValid());
+        BOOST_CHECK_EQUAL (wire.getIndex(), i);
+    }
+    cout << "Testing ports" << endl;
+    for (FlatSize i=0; i<view.getNumFlatPorts(); ++i) {
+        FlatModulePort port = view.getFlatModulePortByIndex(i);
+        BOOST_CHECK (port.getObject().isValid());
+        BOOST_CHECK_EQUAL (port.getIndex(), i);
+        if (!port.isTopPort()) {
+            BOOST_CHECK_EQUAL (port.getUpPort().getIndex(), i);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
