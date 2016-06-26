@@ -12,15 +12,22 @@ using namespace std;
 
 class ModuleGenerator {
     public:
-    ModuleGenerator(int depth = 0, int seed = 0)
+    ModuleGenerator(int dpth = 0, int seed = 0)
     : rengine(seed)
     {
-        for (int i=0; i<depth+1; ++i) {
-            _mods.push_back(Module::createHier());
-            assert(_mods.back().isValid());
-        }
-        _mods.push_back(Module::createLeaf());
-        assert(_mods.back().isValid());
+        depth = dpth;
+        iters = 2;
+        portIters = 2;
+
+        instCount = 10;
+        instDestroyProb = 0.2;
+        portCount = 10;
+        portDestroyProb = 0.2;
+        wireCount = 10;
+        wireDestroyProb = 0.2;
+
+        portConnectProb = 0.9;
+        portDisconnectProb = 0.1;
     }
 
     Module getModule(int i=0) {
@@ -138,24 +145,47 @@ class ModuleGenerator {
     }
 
     void run() {
-        for (int i=0; i<3; ++i){
-            initPorts(20, 0.4);
+        _mods.clear();
+        for (int i=0; i<depth+1; ++i) {
+            _mods.push_back(Module::createHier());
+            assert(_mods.back().isValid());
+        }
+        _mods.push_back(Module::createLeaf());
+        assert(_mods.back().isValid());
+
+        for (int i=0; i<portIters; ++i){
+            initPorts(portCount, portDestroyProb);
             check();
         }
-        for (int i=0; i<10; ++i) {
-            createInstances(100, 0.2);
+        for (int i=0; i<iters; ++i) {
+            createInstances(instCount, instDestroyProb);
             check();
-            createWires(5, 0.2);
+            createWires(wireCount, wireDestroyProb);
             check();
-            connectPorts(0.95, 0.2);
+            connectPorts(portConnectProb, portDisconnectProb);
             check();
         }
     }
 
     private:
     std::vector<Module> _mods;
-
     std::mt19937 rengine;
+
+    public:
+    int depth;
+
+    int iters;
+    int portIters;
+
+    int instCount;
+    float instDestroyProb;
+    int portCount;
+    float portDestroyProb;
+    int wireCount;
+    float wireDestroyProb;
+
+    float portConnectProb;
+    float portDisconnectProb;
 };
 
 BOOST_AUTO_TEST_SUITE(NetlistTest)
@@ -299,14 +329,27 @@ BOOST_AUTO_TEST_CASE(testIteration) {
 }
 
 BOOST_AUTO_TEST_CASE(testRandomConstruction) {
-    cout << "Starting" << endl;
+    ModuleGenerator gen(20);
+    gen.iters = 10;
+    gen.portIters = 10;
+    gen.instCount = 100;
+    gen.instDestroyProb = 0.9;
+    gen.portCount = 100;
+    gen.portDestroyProb = 0.9;
+    gen.wireCount = 100;
+    gen.wireDestroyProb = 0.9;
+    gen.portConnectProb = 0.6;
+    gen.portDisconnectProb = 0.6;
+    gen.run();
+}
+
+BOOST_AUTO_TEST_CASE(testRandomFlatView) {
     ModuleGenerator gen(1);
     gen.run();
     Module mod = gen.getModule();
     FlatView view(mod);
     BOOST_CHECK (view.getTop().getObject() == mod);
 
-    cout << "Testing modules" << endl;
     for (FlatSize i=0; i<view.getNumFlatModules(); ++i) {
         FlatModule mod = view.getFlatModuleByIndex(i);
         BOOST_CHECK (mod.isTop() == (i==0lu));
@@ -316,13 +359,11 @@ BOOST_AUTO_TEST_CASE(testRandomConstruction) {
             BOOST_CHECK_EQUAL (mod.getUpInstance().getIndex(), i);
         }
     }
-    cout << "Testing wires" << endl;
     for (FlatSize i=0; i<view.getNumFlatWires(); ++i) {
         FlatWire wire = view.getFlatWireByIndex(i);
         BOOST_CHECK (wire.getObject().isValid());
         BOOST_CHECK_EQUAL (wire.getIndex(), i);
     }
-    cout << "Testing ports" << endl;
     for (FlatSize i=0; i<view.getNumFlatPorts(); ++i) {
         FlatModulePort port = view.getFlatModulePortByIndex(i);
         BOOST_CHECK (port.getObject().isValid());
