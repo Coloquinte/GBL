@@ -147,23 +147,6 @@ struct WirePortRefTransform {
         return Port(ref._ptr, wref._obj_id, wref._ind);
     }
 };
-
-class FlatTransform {
-    public:
-    FlatNode         operator()(Node node)          { return FlatNode         (node, _ref); }
-    FlatWire         operator()(Wire wire)          { return FlatWire         (wire, _ref); }
-    FlatPort         operator()(Port port)          { return FlatPort         (port, _ref); }
-    FlatModule       operator()(Module module)      { return FlatModule       (FlatNode(module, _ref)); }
-    FlatInstance     operator()(Instance instance)  { return FlatInstance     (FlatNode(instance, _ref)); }
-    FlatInstancePort operator()(InstancePort port)  { return FlatInstancePort (FlatPort(port, _ref)); }
-    FlatModulePort   operator()(ModulePort port)    { return FlatModulePort   (FlatPort(port, _ref)); }
-
-    FlatTransform(const FlatRef& ref) : _ref(ref) {}
-
-    private:
-    FlatRef _ref;
-};
-
 } // End namespace gbl::internal
 
 template<class InputIterator, class UnaryFunction>
@@ -289,36 +272,6 @@ inline Properties Port::properties() {
     const std::vector<internal::DataImpl>& refData = _ref._ptr->_nodes[_ref._instInd]._refData;
     if (refData.size() <= _ref._portInd) return Properties(nullptr, nullptr);
     else return Names(refData[_ref._portInd].beginProps(), refData[_ref._portInd].endProps());
-}
-
-inline FlatWire::Ports
-FlatWire::ports() {
-    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
-}
-
-inline FlatNode::Ports
-FlatNode::ports() {
-    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
-}
-
-inline FlatModule::Ports
-FlatModule::ports() {
-    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
-}
-
-inline FlatInstance::Ports
-FlatInstance::ports() {
-    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
-}
-
-inline FlatModule::Wires
-FlatModule::wires() {
-    return getTransformContainer(getObject().wires(), internal::FlatTransform(_ref));
-}
-
-inline FlatModule::Instances
-FlatModule::instances() {
-    return getTransformContainer(getObject().instances(), internal::FlatTransform(_ref));
 }
 
 } // End namespace gbl

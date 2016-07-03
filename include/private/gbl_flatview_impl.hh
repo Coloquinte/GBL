@@ -1,7 +1,7 @@
 // Copyright (C) 2016 Gabriel Gouvine - All Rights Reserved
 
-#ifndef GBL_FLATVIEW_HH
-#define GBL_FLATVIEW_HH
+#ifndef GBL_FLATVIEW_IMPL_HH
+#define GBL_FLATVIEW_IMPL_HH
 
 #include <vector>
 #include <unordered_map>
@@ -99,6 +99,54 @@ private:
     std::vector<std::vector<Size> > _portHierToInternal;
 };
 
+namespace internal {
+class FlatTransform {
+    public:
+    FlatNode         operator()(Node node)          { return FlatNode         (node, _ref); }
+    FlatWire         operator()(Wire wire)          { return FlatWire         (wire, _ref); }
+    FlatPort         operator()(Port port)          { return FlatPort         (port, _ref); }
+    FlatModule       operator()(Module module)      { return FlatModule       (FlatNode(module, _ref)); }
+    FlatInstance     operator()(Instance instance)  { return FlatInstance     (FlatNode(instance, _ref)); }
+    FlatInstancePort operator()(InstancePort port)  { return FlatInstancePort (FlatPort(port, _ref)); }
+    FlatModulePort   operator()(ModulePort port)    { return FlatModulePort   (FlatPort(port, _ref)); }
+
+    FlatTransform(const FlatRef& ref) : _ref(ref) {}
+
+    private:
+    FlatRef _ref;
+};
+}
+
+inline FlatWire::Ports
+FlatWire::ports() {
+    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
+}
+
+inline FlatNode::Ports
+FlatNode::ports() {
+    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
+}
+
+inline FlatModule::Ports
+FlatModule::ports() {
+    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
+}
+
+inline FlatInstance::Ports
+FlatInstance::ports() {
+    return getTransformContainer(getObject().ports(), internal::FlatTransform(_ref));
+}
+
+inline FlatModule::Wires
+FlatModule::wires() {
+    return getTransformContainer(getObject().wires(), internal::FlatTransform(_ref));
+}
+
+inline FlatModule::Instances
+FlatModule::instances() {
+    return getTransformContainer(getObject().instances(), internal::FlatTransform(_ref));
+}
+
 inline Size bisectIndex(const std::vector<FlatSize>& vec, FlatSize flatIndex) {
     Size ind = std::distance(
         vec.begin(),
@@ -161,6 +209,8 @@ inline FlatRef::FlatRef(FlatSize index, const FlatView& view)
 , _index(index)
 {
 }
+inline bool FlatRef::operator==(const FlatRef& o) const { return _index == o._index; }
+inline bool FlatRef::operator!=(const FlatRef& o) const { return _index != o._index; }
 
 inline FlatNode::FlatNode(const Node& object, const FlatRef& ref) : _object(object), _ref(ref) {}
 inline FlatWire::FlatWire(const Wire& object, const FlatRef& ref) : _object(object), _ref(ref) {}
@@ -295,6 +345,14 @@ inline Names FlatPort::names() { return getObject().names(); }
 inline Properties FlatNode::properties() { return getObject().properties(); }
 inline Properties FlatWire::properties() { return getObject().properties(); }
 inline Properties FlatPort::properties() { return getObject().properties(); }
+
+inline bool FlatNode::operator==(const FlatNode& o) const { return _object == o._object && _ref == o._ref; }
+inline bool FlatNode::operator!=(const FlatNode& o) const { return !operator==(o); }
+inline bool FlatWire::operator==(const FlatWire& o) const { return _object == o._object && _ref == o._ref; }
+inline bool FlatWire::operator!=(const FlatWire& o) const { return !operator==(o); }
+inline bool FlatPort::operator==(const FlatPort& o) const { return _object == o._object && _ref == o._ref; }
+inline bool FlatPort::operator!=(const FlatPort& o) const { return !operator==(o); }
+
 
 } // End namespace gbl
 

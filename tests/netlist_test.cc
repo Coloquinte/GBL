@@ -2,6 +2,7 @@
 #include "testing.hh"
 #include "gbl.hh"
 #include "gbl_symbols.hh"
+#include "gbl_flatview.hh"
 
 #include <iostream>
 #include <algorithm>

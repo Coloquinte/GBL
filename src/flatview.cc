@@ -1,6 +1,6 @@
 // Copyright (C) 2016 Gabriel Gouvine - All Rights Reserved
 
-#include "gbl.hh"
+#include "gbl_flatview.hh"
 
 #include <unordered_set>
 

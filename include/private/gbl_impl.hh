@@ -438,15 +438,6 @@ inline bool PortRef::operator!=(const PortRef& o) const { return !operator==(o);
 inline bool Port::operator==(const Port& o) const { return _ref == o._ref; }
 inline bool Port::operator!=(const Port& o) const { return _ref != o._ref; }
 
-inline bool FlatRef::operator==(const FlatRef& o) const { return _index == o._index; }
-inline bool FlatRef::operator!=(const FlatRef& o) const { return _index != o._index; }
-inline bool FlatNode::operator==(const FlatNode& o) const { return _object == o._object && _ref == o._ref; }
-inline bool FlatNode::operator!=(const FlatNode& o) const { return !operator==(o); }
-inline bool FlatWire::operator==(const FlatWire& o) const { return _object == o._object && _ref == o._ref; }
-inline bool FlatWire::operator!=(const FlatWire& o) const { return !operator==(o); }
-inline bool FlatPort::operator==(const FlatPort& o) const { return _object == o._object && _ref == o._ref; }
-inline bool FlatPort::operator!=(const FlatPort& o) const { return !operator==(o); }
-
 inline bool EltRef::isValidWireRef() {
     return _ptr != nullptr
         && _ptr->_wires.isValid(_ind);

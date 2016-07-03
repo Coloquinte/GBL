@@ -25,15 +25,6 @@ class Port;
 class InstancePort;
 class ModulePort;
 
-class FlatModule;
-class FlatNode;
-class FlatInstance;
-class FlatWire;
-class FlatPort;
-class FlatInstancePort;
-class FlatModulePort;
-class FlatView;
-
 // Implementation
 
 namespace internal {
@@ -75,16 +66,6 @@ typedef TransformIterator<FilterIterator<EltRefInputIterator, WireFilter>, WireT
 typedef TransformIterator<FilterIterator<EltRefInputIterator, NodeFilter>, NodeTransform> NodeIterator;
 typedef TransformIterator<FilterIterator<NodeIterator, InstanceFilter>, InstanceTransform> InstanceIterator;
 
-class FlatTransform;
-
-typedef TransformIterator<WireIterator,         FlatTransform> FlatWireIterator;
-typedef TransformIterator<NodeIterator,         FlatTransform> FlatNodeIterator;
-typedef TransformIterator<InstanceIterator,     FlatTransform> FlatInstanceIterator;
-typedef TransformIterator<WirePortIterator,     FlatTransform> FlatWirePortIterator;
-typedef TransformIterator<NodePortIterator,     FlatTransform> FlatNodePortIterator;
-typedef TransformIterator<InstancePortIterator, FlatTransform> FlatInstancePortIterator;
-typedef TransformIterator<ModulePortIterator,   FlatTransform> FlatModulePortIterator;
-
 typedef const ID* NameIterator;
 typedef const ID* PropertyIterator;
 }
@@ -116,16 +97,6 @@ struct PortRef {
   internal::ModuleImpl *_ptr;
   Size _instInd;
   Size _portInd;
-};
-
-struct FlatRef {
-  bool operator==(const FlatRef&) const;
-  bool operator!=(const FlatRef&) const;
-
-  const FlatView& _view;
-  FlatSize _index;
-
-  FlatRef(FlatSize index, const FlatView& view);
 };
 
 typedef Container<internal::NameIterator>     Names;
