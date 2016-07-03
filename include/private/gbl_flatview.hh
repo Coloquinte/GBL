@@ -283,6 +283,19 @@ inline FlatSize FlatView::getNumFlatPorts() const {
     return _portEndIndexs.back() - _portEndIndexs.front();
 }
 
+inline bool FlatNode::hasName(ID id) { return getObject().hasName(id); }
+inline bool FlatWire::hasName(ID id) { return getObject().hasName(id); }
+inline bool FlatPort::hasName(ID id) { return getObject().hasName(id); }
+inline bool FlatNode::hasProperty(ID id) { return getObject().hasProperty(id); }
+inline bool FlatWire::hasProperty(ID id) { return getObject().hasProperty(id); }
+inline bool FlatPort::hasProperty(ID id) { return getObject().hasProperty(id); }
+inline Names FlatNode::names() { return getObject().names(); }
+inline Names FlatWire::names() { return getObject().names(); }
+inline Names FlatPort::names() { return getObject().names(); }
+inline Properties FlatNode::properties() { return getObject().properties(); }
+inline Properties FlatWire::properties() { return getObject().properties(); }
+inline Properties FlatPort::properties() { return getObject().properties(); }
+
 } // End namespace gbl
 
 #endif

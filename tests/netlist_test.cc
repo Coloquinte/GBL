@@ -370,6 +370,7 @@ BOOST_AUTO_TEST_CASE(testRandomFlatView) {
         BOOST_CHECK_EQUAL (port.getIndex(), i);
         if (!port.isTopPort()) {
             BOOST_CHECK_EQUAL (port.getUpPort().getIndex(), i);
+            BOOST_CHECK (port.getUpPort().getDownPort() == port);
         }
     }
 }
